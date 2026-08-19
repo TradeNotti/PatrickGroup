@@ -1,0 +1,45 @@
+/* Patrick Group theme overrides on top of the Modernist design system:
+   amber accent (final color after the red -> green -> yellow iterations),
+   and a class-based dark theme that forces every dark/black word or number
+   to white while keeping text on solid accent fills dark for contrast. */
+:root {
+  --color-accent: #d99e00;
+  --color-accent-100: #fdf6e3; --color-accent-200: #fbe9b0; --color-accent-300: #f7d873;
+  --color-accent-400: #efc02a; --color-accent-500: #d99e00; --color-accent-600: #b98600;
+  --color-accent-700: #946a00; --color-accent-800: #6f5000; --color-accent-900: #4d3800;
+  --color-accent-2: #d99e00;
+  --color-accent-2-100: #fdf6e3; --color-accent-2-200: #fbe9b0; --color-accent-2-300: #f7d873;
+  --color-accent-2-400: #efc02a; --color-accent-2-500: #d99e00; --color-accent-2-600: #b98600;
+  --color-accent-2-700: #946a00; --color-accent-2-800: #6f5000; --color-accent-2-900: #4d3800;
+}
+
+.pa-dark {
+  --color-bg: #17150f; --color-surface: #241f14; --color-text: #ffffff;
+  --color-divider: color-mix(in srgb, #ffffff 26%, transparent);
+  --color-neutral-100: #2a2519; --color-neutral-200: #332d1f; --color-neutral-300: #0c0b08;
+  --color-neutral-700: #e4cf8a; --color-neutral-800: #ffffff;
+}
+.pa-dark .tag-neutral { background: #332d1f; color: #ffffff; }
+.pa-dark .tag-accent { background: #3a2f0a; color: #ffe08a; }
+.pa-dark .tag-outline { background: transparent; color: #ffffff; border-color: #ffffff; }
+.pa-dark .text-muted { color: #ffffff; }
+
+/* force every remaining dark/black word or number to white in dark theme */
+.pa-dark, .pa-dark * { color: #ffffff; }
+.pa-dark h1, .pa-dark h2, .pa-dark h3, .pa-dark h4, .pa-dark p, .pa-dark span, .pa-dark div,
+.pa-dark label, .pa-dark b, .pa-dark strong, .pa-dark td, .pa-dark th, .pa-dark li,
+.pa-dark .table th, .pa-dark .table td, .pa-dark .field label, .pa-dark .btn-secondary,
+.pa-dark .dialog, .pa-dark .dialog-title, .pa-dark .dialog-body { color: #ffffff; }
+.pa-dark .input, .pa-dark select, .pa-dark option, .pa-dark textarea {
+  color: #ffffff; background: #241f14; border-color: color-mix(in srgb, #ffffff 34%, transparent);
+}
+.pa-dark .input::placeholder { color: color-mix(in srgb, #ffffff 55%, transparent); }
+.pa-dark option { background: #241f14; }
+.pa-dark .btn-secondary { background: transparent; border-color: #ffffff; }
+.pa-dark .dialog { background: #241f14; }
+
+/* keep text dark only where it sits on a solid yellow fill (white would be unreadable) */
+.pa-dark .btn-primary, .pa-dark .btn-primary * { color: #201e1d !important; }
+.pa-dark .seg-opt:has(input:checked), .pa-dark .seg-opt:has(input:checked) * { color: #201e1d !important; }
+.pa-app .btn-primary { color: #201e1d !important; }
+.pa-app .seg-opt:has(input:checked) { color: #201e1d !important; }
