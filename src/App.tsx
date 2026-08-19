@@ -19,7 +19,7 @@ const ROLES = [
 ];
 
 function AppShell() {
-  const { authed, loading, logout } = useAuth();
+  const { authed, loading, checkError, refetch, logout } = useAuth();
   const [dark, setDark] = useState(false);
   const [roleIdx, setRoleIdx] = useState(0);
   const [tab, setTab] = useState<Tab>('home');
@@ -51,7 +51,15 @@ function AppShell() {
         />
 
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          {loading ? null : !authed ? (
+          {loading ? (
+            <div style={{ padding: 24, fontSize: 13, color: 'color-mix(in srgb, var(--color-text) 55%, transparent)' }}>Loading…</div>
+          ) : checkError ? (
+            <div style={{ padding: 24 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Couldn't reach the server</div>
+              <div style={{ fontSize: 13, color: 'color-mix(in srgb, var(--color-text) 55%, transparent)', marginBottom: 14 }}>{checkError}</div>
+              <button onClick={() => refetch()} className="btn btn-secondary">Retry</button>
+            </div>
+          ) : !authed ? (
             <LoginScreen />
           ) : (
             <>

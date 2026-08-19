@@ -1,6 +1,6 @@
 import { requireAuth } from './_lib/auth.ts';
 import { db } from './_lib/db.ts';
-import { readJsonBody, sendJson } from './_lib/http.ts';
+import { readJsonBody, sendJson, withErrors } from './_lib/http.ts';
 import { upsertCustomer } from './_lib/queries.ts';
 import type { Req, Res } from './_lib/http.ts';
 
@@ -12,7 +12,7 @@ interface SaleInput {
   items: SaleItemInput[];
 }
 
-export default async function handler(req: Req, res: Res) {
+async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
 
   if (req.method === 'GET') {
@@ -75,3 +75,5 @@ export default async function handler(req: Req, res: Res) {
     client.release();
   }
 }
+
+export default withErrors(handler);

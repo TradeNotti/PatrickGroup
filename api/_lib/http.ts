@@ -46,3 +46,18 @@ export function setCookie(res: Res, name: string, value: string, maxAgeSeconds: 
 export function clearCookie(res: Res, name: string) {
   res.setHeader('Set-Cookie', `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
 }
+
+/** Wraps a handler so any thrown/rejected error becomes a JSON {error}
+ *  response instead of Vercel's generic HTML error page — keeps failures
+ *  (bad env vars, a DB that's unreachable, etc.) visible and debuggable
+ *  from the client instead of surfacing as an opaque blank screen. */
+export function withErrors(fn: (req: Req, res: Res) => Promise<void>) {
+  return async (req: Req, res: Res) => {
+    try {
+      await fn(req, res);
+    } catch (err) {
+      console.error(err);
+      if (!res.headersSent) sendJson(res, 500, { error: err instanceof Error ? err.message : 'internal error' });
+    }
+  };
+}

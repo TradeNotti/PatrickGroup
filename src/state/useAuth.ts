@@ -23,6 +23,8 @@ export function useAuth() {
   return {
     authed: !!status.data?.authed,
     loading: status.isLoading,
+    checkError: status.error instanceof ApiError ? status.error.message : status.error instanceof Error ? status.error.message : null,
+    refetch: status.refetch,
     login,
     logout,
     loginError: login.error instanceof ApiError ? login.error.message : null,
