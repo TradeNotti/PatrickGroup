@@ -1,106 +1,101 @@
-export type NodeType = 'company' | 'region' | 'distributor' | 'wholesaler' | 'retailer' | 'order';
-
-export interface OrderItem {
-  name: string;
-  qty: number;
-  unit: number;
-  total: number;
-}
-
-export interface OrderNode {
-  type: 'order';
-  name: string;
-  status: string;
-  date: string;
-  items: OrderItem[];
-  value: number;
-  sub: string;
-}
-
-export interface BranchNode {
-  type: Exclude<NodeType, 'order'>;
-  name: string;
-  value: number;
-  sub: string;
-  children: TreeNode[];
-}
-
-export type TreeNode = OrderNode | BranchNode;
-
-export type Tab = 'home' | 'explore' | 'credit' | 'more';
-
+export type Tab = 'home' | 'credit' | 'more';
 export type ModuleKey = 'sales' | 'inventory' | 'distribution' | 'production' | 'purchasing' | 'finance';
-
+export type Range = 'today' | 'week' | 'month';
 export type PayMethod = 'Cash' | 'Credit';
 
-export interface SaleForm {
-  product: string;
-  qty: string;
-  price: string;
-  customer: string;
-  pay: PayMethod;
-  terms: string;
+export interface Customer {
+  id: number;
+  name: string;
+  balance: number;
+  oldest_at: string | null;
+  first_terms_days: number | null;
 }
 
-export interface SaleEntry {
+export interface SaleItemInput {
   product: string;
   qty: number;
   price: number;
-  total: number;
+}
+
+export interface SaleOrder {
+  id: number;
+  customer: string;
   pay: PayMethod;
   terms: number;
-  customer: string;
-  date: string;
+  total: number;
+  created_at: string;
 }
 
-export interface InvRecord { item: string; qty: string; dir: 'In' | 'Out'; }
-export interface DistRecord { route: string; driver: string; status: string; }
-export interface ProdRecord { id: string; seed: string; oil: string; }
-export interface PurRecord { supplier: string; item: string; qty: string; price: string; }
-
-export interface ManualRecords {
-  inv: InvRecord;
-  dist: DistRecord;
-  prod: ProdRecord;
-  pur: PurRecord;
-}
-
-export interface ManualLists {
-  inv: InvRecord[];
-  dist: DistRecord[];
-  prod: ProdRecord[];
-  pur: PurRecord[];
-}
-
-export interface CreditCustomer {
+export interface InventoryItem {
   id: number;
   name: string;
-  dist: string;
-  balance: number;
-  due: number;
+  qty: number;
+  unit: string;
 }
 
-export interface PaymentDialog {
+export interface InventoryMovement {
   id: number;
-  name: string;
-  amount: string;
+  item_name: string;
+  direction: 'In' | 'Out';
+  qty: number;
+  reference: string | null;
+  created_at: string;
 }
 
-export interface AppState {
-  tab: Tab;
-  dark: boolean;
-  range: string;
-  path: TreeNode[];
-  module: ModuleKey | null;
-  dialog: PaymentDialog | null;
-  paidIds: number[];
-  roleIdx: number;
-  q: string;
-  showEntry: boolean;
-  entries: SaleEntry[];
-  form: SaleForm;
-  mrec: ManualRecords;
-  mlist: ManualLists;
+export interface Delivery {
+  id: number;
+  route: string;
+  driver: string;
+  status: string;
+  created_at: string;
 }
 
-export type SetState = (update: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => void;
+export interface ProductionBatch {
+  id: number;
+  batch_code: string;
+  seed_kg: number;
+  oil_l: number;
+  created_at: string;
+}
+
+export interface Purchase {
+  id: number;
+  supplier: string;
+  item: string;
+  qty: number;
+  price: number;
+  status: string;
+  created_at: string;
+}
+
+export interface LedgerEntry {
+  id: number;
+  entry_date: string;
+  account: string;
+  debit: number;
+  credit: number;
+  memo: string | null;
+}
+
+export interface DashboardData {
+  sales: number;
+  orders: number;
+  collections: number;
+  outstandingCredit: number;
+  stockLitres: number;
+  productionLitres: number;
+  oilMargin: number;
+  cashPosition: number;
+  topProducts: { product: string; value: number }[];
+  overdue: { name: string; amount: number; days: number }[];
+}
+
+export interface FinanceSummary {
+  revenue: number;
+  expenses: number;
+  receivables: number;
+  cashPosition: number;
+  grossMarginPct: number;
+  netProfit: number;
+  monthlyRevenue: { m: string; revenue: number }[];
+}

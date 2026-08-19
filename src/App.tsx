@@ -1,53 +1,96 @@
-import { useMemo } from 'react';
-import { buildTree } from './data/tree';
-import { useDerived } from './state/derive';
-import { useAppState } from './state/useAppState';
+import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAuth } from './state/useAuth';
 import { StatusBar } from './components/StatusBar';
 import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './components/HomeScreen';
-import { ExploreScreen } from './components/ExploreScreen';
 import { CreditScreen } from './components/CreditScreen';
 import { MoreScreen } from './components/MoreScreen';
-import { PaymentDialog } from './components/PaymentDialog';
 import { EntryOverlay } from './components/EntryOverlay';
+import { LoginScreen } from './components/LoginScreen';
+import type { ModuleKey, Range, Tab } from './types';
 
-export default function App() {
-  const tree = useMemo(() => buildTree(), []);
-  const [state, set] = useAppState();
-  const d = useDerived(state, set, tree);
+const queryClient = new QueryClient();
+
+const ROLES = [
+  { label: 'Owner', greet: 'Patrick' },
+  { label: 'Manager', greet: 'Manager' },
+];
+
+function AppShell() {
+  const { authed, loading, logout } = useAuth();
+  const [dark, setDark] = useState(false);
+  const [roleIdx, setRoleIdx] = useState(0);
+  const [tab, setTab] = useState<Tab>('home');
+  const [module, setModule] = useState<ModuleKey | null>(null);
+  const [range, setRange] = useState<Range>('today');
+  const [showEntry, setShowEntry] = useState(false);
+
+  const role = ROLES[roleIdx];
+  const acc = 'var(--color-accent)';
+  const mut = 'color-mix(in srgb, var(--color-text) 45%, transparent)';
+
+  function goTab(next: Tab) {
+    setTab(next);
+    setModule(null);
+  }
 
   return (
     <div
-      className={d.appClass}
+      className={dark ? 'pa-app pa-dark' : 'pa-app'}
       style={{ minHeight: '100vh', background: 'var(--color-neutral-300)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '28px 16px', fontFamily: 'var(--font-body)' }}
     >
       <div style={{ position: 'relative', width: 404, maxWidth: '100%', height: 868, background: 'var(--color-bg)', border: '2px solid var(--color-text)', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <StatusBar />
-        <TopBar darkLabel={d.darkLabel} onToggleDark={d.toggleDark} roleLabel={d.roleLabel} onCycleRole={d.cycleRole} />
+        <TopBar
+          darkLabel={dark ? 'Light' : 'Dark'}
+          onToggleDark={() => setDark((d) => !d)}
+          roleLabel={role.label}
+          onCycleRole={() => setRoleIdx((i) => (i + 1) % ROLES.length)}
+        />
 
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          {d.isHome && <HomeScreen d={d} />}
-          {d.isExplore && <ExploreScreen d={d} />}
-          {d.isCredit && <CreditScreen d={d} />}
-          {d.isMore && <MoreScreen d={d} />}
+          {loading ? null : !authed ? (
+            <LoginScreen />
+          ) : (
+            <>
+              {tab === 'home' && <HomeScreen range={range} setRange={setRange} onOpenEntry={() => setShowEntry(true)} />}
+              {tab === 'credit' && <CreditScreen />}
+              {tab === 'more' && (
+                <MoreScreen
+                  module={module}
+                  setModule={setModule}
+                  goCredit={() => goTab('credit')}
+                  onOpenEntry={() => setShowEntry(true)}
+                  onSignOut={() => logout.mutate()}
+                />
+              )}
+            </>
+          )}
         </div>
 
-        <BottomNav
-          homeColor={d.homeColor} exploreColor={d.exploreColor} creditColor={d.creditColor} moreColor={d.moreColor}
-          goHome={d.goHome} goExplore={d.goExplore} goCredit={d.goCredit} goMore={d.goMore}
-        />
+        {authed && (
+          <BottomNav
+            homeColor={tab === 'home' ? acc : mut}
+            creditColor={tab === 'credit' ? acc : mut}
+            moreColor={tab === 'more' ? acc : mut}
+            goHome={() => goTab('home')}
+            goCredit={() => goTab('credit')}
+            goMore={() => goTab('more')}
+          />
+        )}
 
-        <PaymentDialog
-          open={!!d.dialog}
-          name={d.dialogName}
-          amount={d.dialogAmount}
-          onCancel={d.closeDialog}
-          onConfirm={d.confirmPay}
-        />
-
-        <EntryOverlay d={d} />
+        {authed && <EntryOverlay open={showEntry} onClose={() => setShowEntry(false)} />}
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppShell />
+    </QueryClientProvider>
   );
 }

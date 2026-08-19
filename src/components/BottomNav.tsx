@@ -1,8 +1,8 @@
-import { NavCreditIcon, NavExploreIcon, NavHomeIcon, NavMoreIcon } from './icons';
+import { NavCreditIcon, NavHomeIcon, NavMoreIcon } from './icons';
 
 interface Props {
-  homeColor: string; exploreColor: string; creditColor: string; moreColor: string;
-  goHome: () => void; goExplore: () => void; goCredit: () => void; goMore: () => void;
+  homeColor: string; creditColor: string; moreColor: string;
+  goHome: () => void; goCredit: () => void; goMore: () => void;
 }
 
 function NavButton({ color, onClick, icon, label }: { color: string; onClick: () => void; icon: React.ReactNode; label: string }) {
@@ -17,11 +17,10 @@ function NavButton({ color, onClick, icon, label }: { color: string; onClick: ()
   );
 }
 
-export function BottomNav({ homeColor, exploreColor, creditColor, moreColor, goHome, goExplore, goCredit, goMore }: Props) {
+export function BottomNav({ homeColor, creditColor, moreColor, goHome, goCredit, goMore }: Props) {
   return (
     <nav style={{ display: 'flex', borderTop: '2px solid var(--color-divider)', background: 'var(--color-bg)' }}>
       <NavButton color={homeColor} onClick={goHome} icon={<NavHomeIcon />} label="Home" />
-      <NavButton color={exploreColor} onClick={goExplore} icon={<NavExploreIcon />} label="Explore" />
       <NavButton color={creditColor} onClick={goCredit} icon={<NavCreditIcon />} label="Credit" />
       <NavButton color={moreColor} onClick={goMore} icon={<NavMoreIcon />} label="More" />
     </nav>

@@ -1,10 +1,28 @@
-import type { Derived } from '../../state/derive';
+import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
+import { useInventoryItems, useInventoryMovements, useRecordMovement } from '../../state/queries';
 import { SectionLabel } from '../ui/SectionLabel';
 import { Segmented } from '../ui/Segmented';
 import { Tag } from '../ui/Tag';
 
-export function InventoryModule({ d }: { d: Derived }) {
+export function InventoryModule() {
+  const { data: items } = useInventoryItems();
+  const { data: moves } = useInventoryMovements(15);
+  const recordMovement = useRecordMovement();
+
+  const [item, setItem] = useState('');
+  const [qty, setQty] = useState('');
+  const [direction, setDirection] = useState<'In' | 'Out'>('In');
+
+  function save() {
+    const qtyN = parseFloat(qty);
+    if (!item.trim() || !(qtyN > 0)) return;
+    recordMovement.mutate(
+      { item: item.trim(), qty: qtyN, direction },
+      { onSuccess: () => { setItem(''); setQty(''); } },
+    );
+  }
+
   return (
     <>
       <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
@@ -14,47 +32,55 @@ export function InventoryModule({ d }: { d: Derived }) {
         <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
           <div className="field" style={{ flex: 2 }}>
             <label>Item</label>
-            <input className="input" value={d.mrec.inv.item} onChange={(e) => d.invItemSet(e.target.value)} placeholder="e.g. Oil 20L" />
+            <input className="input" value={item} onChange={(e) => setItem(e.target.value)} placeholder="e.g. Oil 20L" />
           </div>
           <div className="field" style={{ flex: 1 }}>
             <label>Qty</label>
-            <input className="input" type="number" value={d.mrec.inv.qty} onChange={(e) => d.invQtySet(e.target.value)} placeholder="0" />
+            <input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
           </div>
         </div>
         <Segmented
           name="invdir"
           style={{ marginBottom: 10 }}
           options={[
-            { label: 'In', checked: d.invDirInChk, onChange: d.invDirIn },
-            { label: 'Out', checked: d.invDirOutChk, onChange: d.invDirOut },
+            { label: 'In', checked: direction === 'In', onChange: () => setDirection('In') },
+            { label: 'Out', checked: direction === 'Out', onChange: () => setDirection('Out') },
           ]}
         />
-        <button onClick={d.saveInv} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Save movement</button>
+        <button onClick={save} disabled={!item.trim() || !(parseFloat(qty) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          Save movement
+        </button>
       </div>
 
       <SectionLabel margin="0 0 8px">Stock on hand</SectionLabel>
-      <table className="table" style={{ marginBottom: 24 }}>
-        <tbody>
-          {d.invItems.map((i) => (
-            <tr key={i.name}>
-              <td style={{ fontWeight: 600 }}>{i.name}</td>
-              <td style={{ textAlign: 'right' }}>{i.qty}</td>
-              <td style={{ textAlign: 'right', width: 64 }}><Tag cls={i.tagCls}>{i.tag}</Tag></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {(!items || items.length === 0) ? (
+        <div style={{ fontSize: 13, color: MUT_50, marginBottom: 24 }}>No stock recorded yet.</div>
+      ) : (
+        <table className="table" style={{ marginBottom: 24 }}>
+          <tbody>
+            {items.map((i) => (
+              <tr key={i.id}>
+                <td style={{ fontWeight: 600 }}>{i.name}</td>
+                <td style={{ textAlign: 'right' }}>{i.qty.toLocaleString('en-US')} {i.unit}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <SectionLabel margin="0 0 8px">Stock movements</SectionLabel>
       <div style={{ borderTop: '2px solid var(--color-divider)' }}>
-        {d.invMoves.map((m, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 2px', borderBottom: '1px solid var(--color-divider)' }}>
-            <Tag cls={m.dirCls} style={{ width: 52, justifyContent: 'center' }}>{m.dir}</Tag>
+        {moves && moves.length === 0 && <div style={{ padding: '14px 2px', fontSize: 13, color: MUT_50 }}>No movements yet.</div>}
+        {moves?.map((m) => (
+          <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 2px', borderBottom: '1px solid var(--color-divider)' }}>
+            <Tag cls={m.direction === 'In' ? 'tag-neutral' : 'tag-outline'} style={{ width: 52, justifyContent: 'center' }}>{m.direction}</Tag>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 13 }}>{m.item}</div>
-              <div style={{ fontSize: 11, color: MUT_50 }}>{m.ref} · {m.time}</div>
+              <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 13 }}>{m.item_name}</div>
+              <div style={{ fontSize: 11, color: MUT_50 }}>{new Date(m.created_at).toLocaleString()}</div>
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>{m.qty}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>
+              {m.direction === 'In' ? '+' : '−'}{m.qty.toLocaleString('en-US')}
+            </div>
           </div>
         ))}
       </div>
