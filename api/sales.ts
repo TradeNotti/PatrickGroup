@@ -1,8 +1,8 @@
-import { requireAuth } from './_lib/auth.ts';
-import { db } from './_lib/db.ts';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.ts';
-import { upsertCustomer } from './_lib/queries.ts';
-import type { Req, Res } from './_lib/http.ts';
+import { requireAuth } from './_lib/auth';
+import { db } from './_lib/db';
+import { readJsonBody, sendJson, withErrors } from './_lib/http';
+import { upsertCustomer } from './_lib/queries';
+import type { Req, Res } from './_lib/http';
 
 interface SaleItemInput { product: string; qty: number; price: number; }
 interface SaleInput {

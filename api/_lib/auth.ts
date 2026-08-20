@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { clearCookie, parseCookies, sendJson, setCookie } from './http.ts';
-import type { Req, Res } from './http.ts';
+import { clearCookie, parseCookies, sendJson, setCookie } from './http';
+import type { Req, Res } from './http';
 
 const COOKIE_NAME = 'pg_session';
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 days

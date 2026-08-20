@@ -1,7 +1,7 @@
-import { requireAuth } from './_lib/auth.ts';
-import { db } from './_lib/db.ts';
-import { sendJson, withErrors } from './_lib/http.ts';
-import type { Req, Res } from './_lib/http.ts';
+import { requireAuth } from './_lib/auth';
+import { db } from './_lib/db';
+import { sendJson, withErrors } from './_lib/http';
+import type { Req, Res } from './_lib/http';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
