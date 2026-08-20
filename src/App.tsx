@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './state/useAuth';
-import { StatusBar } from './components/StatusBar';
 import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './components/HomeScreen';
@@ -42,7 +41,6 @@ function AppShell() {
       style={{ minHeight: '100vh', background: 'var(--color-neutral-300)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '28px 16px', fontFamily: 'var(--font-body)' }}
     >
       <div style={{ position: 'relative', width: 404, maxWidth: '100%', height: 868, background: 'var(--color-bg)', border: '2px solid var(--color-text)', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <StatusBar />
         <TopBar
           darkLabel={dark ? 'Light' : 'Dark'}
           onToggleDark={() => setDark((d) => !d)}

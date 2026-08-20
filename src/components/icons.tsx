@@ -1,23 +1,3 @@
-export function BatteryIcon() {
-  return (
-    <svg width="16" height="12" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="1" y="14" width="4" height="8" />
-      <rect x="7" y="10" width="4" height="12" />
-      <rect x="13" y="6" width="4" height="16" />
-      <rect x="19" y="2" width="4" height="20" />
-    </svg>
-  );
-}
-
-export function WifiIcon() {
-  return (
-    <svg width="18" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <rect x="2" y="7" width="16" height="10" />
-      <path d="M20 10v4" />
-    </svg>
-  );
-}
-
 export function ThemeIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
