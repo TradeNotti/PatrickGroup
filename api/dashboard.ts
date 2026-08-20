@@ -1,8 +1,8 @@
-import { requireAuth } from './_lib/auth';
-import { db } from './_lib/db';
-import { sendJson, withErrors } from './_lib/http';
-import { cashPosition, customerBalances, rangeCutoff } from './_lib/queries';
-import type { Req, Res } from './_lib/http';
+import { requireAuth } from './_lib/auth.js';
+import { db } from './_lib/db.js';
+import { sendJson, withErrors } from './_lib/http.js';
+import { cashPosition, customerBalances, rangeCutoff } from './_lib/queries.js';
+import type { Req, Res } from './_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;

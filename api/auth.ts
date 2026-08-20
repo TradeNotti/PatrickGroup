@@ -1,6 +1,6 @@
-import { isAuthed, login, logout } from './_lib/auth';
-import { readJsonBody, sendJson, withErrors } from './_lib/http';
-import type { Req, Res } from './_lib/http';
+import { isAuthed, login, logout } from './_lib/auth.js';
+import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
+import type { Req, Res } from './_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (req.method === 'GET') {

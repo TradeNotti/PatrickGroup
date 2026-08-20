@@ -1,7 +1,7 @@
-import { requireAuth } from './_lib/auth';
-import { db } from './_lib/db';
-import { readJsonBody, sendJson, withErrors } from './_lib/http';
-import type { Req, Res } from './_lib/http';
+import { requireAuth } from './_lib/auth.js';
+import { db } from './_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
+import type { Req, Res } from './_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
