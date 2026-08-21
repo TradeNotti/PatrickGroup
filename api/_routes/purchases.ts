@@ -1,6 +1,6 @@
 import { requireAuth } from '../_lib/auth.js';
 import { db } from '../_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { parseOptionalDate, readJsonBody, sendJson, withErrors } from '../_lib/http.js';
 import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
@@ -36,29 +36,33 @@ async function handler(req: Req, res: Res) {
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
 
-  const body = await readJsonBody<{ supplier?: string; item?: string; qty?: number; price?: number }>(req);
+  const body = await readJsonBody<{ supplier?: string; item?: string; qty?: number; price?: number; date?: string }>(req);
   const supplier = String(body.supplier || '').trim();
   const item = String(body.item || '').trim();
   const qty = Number(body.qty) || 0;
   const price = Number(body.price) || 0;
   if (!supplier || !item) return sendJson(res, 400, { error: 'supplier and item are required' });
 
+  const purchaseDate = parseOptionalDate(body.date);
+  if (purchaseDate === 'invalid') return sendJson(res, 400, { error: 'invalid date' });
+
   const pool = db();
   const client = await pool.connect();
   try {
     await client.query('begin');
     const inserted = await client.query(
-      `insert into purchases (supplier, item, qty, price, status) values ($1, $2, $3, $4, 'Ordered')
+      `insert into purchases (supplier, item, qty, price, status, created_at)
+       values ($1, $2, $3, $4, 'Ordered', coalesce($5, now()))
        returning id, supplier, item, qty::float8, price::float8, status, created_at`,
-      [supplier, item, qty, price],
+      [supplier, item, qty, price, purchaseDate],
     );
     if (price > 0) {
       const purchaseId = inserted.rows[0].id;
       await client.query(
-        `insert into ledger_entries (account, debit, credit, memo, source_type, source_id) values
-          ('Inventory – purchases', $1, 0, $2, 'purchase', $3),
-          ('Accounts payable', 0, $1, $2, 'purchase', $3)`,
-        [price, `Purchase from ${supplier}`, purchaseId],
+        `insert into ledger_entries (entry_date, account, debit, credit, memo, source_type, source_id) values
+          (coalesce($4, now()), 'Inventory – purchases', $1, 0, $2, 'purchase', $3),
+          (coalesce($4, now()), 'Accounts payable', 0, $1, $2, 'purchase', $3)`,
+        [price, `Purchase from ${supplier}`, purchaseId, purchaseDate],
       );
     }
     await client.query('commit');

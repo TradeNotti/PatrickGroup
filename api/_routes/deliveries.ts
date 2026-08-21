@@ -1,6 +1,6 @@
 import { requireAuth } from '../_lib/auth.js';
 import { db } from '../_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { parseOptionalDate, readJsonBody, sendJson, withErrors } from '../_lib/http.js';
 import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
@@ -28,17 +28,21 @@ async function handler(req: Req, res: Res) {
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
 
-  const body = await readJsonBody<{ distributorId?: number; route?: string; driver?: string; status?: string }>(req);
+  const body = await readJsonBody<{ distributorId?: number; route?: string; driver?: string; status?: string; date?: string }>(req);
   const distributorId = Number(body.distributorId) || null;
   const route = String(body.route || '').trim();
   const driver = String(body.driver || '').trim();
   const status = String(body.status || 'In transit');
   if (!route || !driver) return sendJson(res, 400, { error: 'route and driver are required' });
 
+  const deliveryDate = parseOptionalDate(body.date);
+  if (deliveryDate === 'invalid') return sendJson(res, 400, { error: 'invalid date' });
+
   const { rows } = await db().query(
-    `insert into deliveries (distributor_id, route, driver, status) values ($1, $2, $3, $4)
+    `insert into deliveries (distributor_id, route, driver, status, created_at)
+     values ($1, $2, $3, $4, coalesce($5, now()))
      returning id, distributor_id, route, driver, status, created_at`,
-    [distributorId, route, driver, status],
+    [distributorId, route, driver, status, deliveryDate],
   );
   sendJson(res, 201, rows[0]);
 }

@@ -1,6 +1,6 @@
 import { requireAuth } from '../_lib/auth.js';
 import { db } from '../_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { parseOptionalDate, readJsonBody, sendJson, withErrors } from '../_lib/http.js';
 import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
@@ -26,7 +26,7 @@ async function handler(req: Req, res: Res) {
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
 
-  const body = await readJsonBody<{ id?: string; seed?: number; oil?: number }>(req);
+  const body = await readJsonBody<{ id?: string; seed?: number; oil?: number; date?: string }>(req);
   const batchCode = String(body.id || '').trim();
   const seedKg = Number(body.seed);
   const oilL = Number(body.oil);
@@ -34,10 +34,14 @@ async function handler(req: Req, res: Res) {
     return sendJson(res, 400, { error: 'batch, seed and oil are required' });
   }
 
+  const batchDate = parseOptionalDate(body.date);
+  if (batchDate === 'invalid') return sendJson(res, 400, { error: 'invalid date' });
+
   const { rows } = await db().query(
-    `insert into production_batches (batch_code, seed_kg, oil_l) values ($1, $2, $3)
+    `insert into production_batches (batch_code, seed_kg, oil_l, created_at)
+     values ($1, $2, $3, coalesce($4, now()))
      returning id, batch_code, seed_kg::float8, oil_l::float8, created_at`,
-    [batchCode, seedKg, oilL],
+    [batchCode, seedKg, oilL, batchDate],
   );
   sendJson(res, 201, rows[0]);
 }

@@ -1,6 +1,6 @@
 import { requireAuth } from '../_lib/auth.js';
 import { db } from '../_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { parseOptionalDate, readJsonBody, sendJson, withErrors } from '../_lib/http.js';
 import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
@@ -47,11 +47,14 @@ async function handler(req: Req, res: Res) {
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
 
-  const body = await readJsonBody<{ item?: string; qty?: number; direction?: 'In' | 'Out' }>(req);
+  const body = await readJsonBody<{ item?: string; qty?: number; direction?: 'In' | 'Out'; date?: string }>(req);
   const item = String(body.item || '').trim();
   const qty = Number(body.qty);
   const direction = body.direction === 'Out' ? 'Out' : 'In';
   if (!item || !(qty > 0)) return sendJson(res, 400, { error: 'item and a positive qty are required' });
+
+  const moveDate = parseOptionalDate(body.date);
+  if (moveDate === 'invalid') return sendJson(res, 400, { error: 'invalid date' });
 
   const pool = db();
   const client = await pool.connect();
@@ -67,8 +70,9 @@ async function handler(req: Req, res: Res) {
     const delta = direction === 'In' ? qty : -qty;
     await client.query(`update inventory_items set qty = greatest(0, qty + $1) where id = $2`, [delta, itemId]);
     await client.query(
-      `insert into inventory_movements (item_id, item_name, direction, qty, reference) values ($1, $2, $3, $4, 'Manual entry')`,
-      [itemId, item, direction, qty],
+      `insert into inventory_movements (item_id, item_name, direction, qty, reference, created_at)
+       values ($1, $2, $3, $4, 'Manual entry', coalesce($5, now()))`,
+      [itemId, item, direction, qty, moveDate],
     );
     await client.query('commit');
   } catch (err) {

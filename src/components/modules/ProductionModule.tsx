@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
+import { todayStr } from '../../lib/format';
 import { ArrowRightIcon } from '../icons';
 import { useDeleteProductionBatch, useProductionBatches, useRecordBatch } from '../../state/queries';
 import { useRole } from '../../state/role';
@@ -25,13 +26,14 @@ export function ProductionModule() {
   const [id, setId] = useState('');
   const [seed, setSeed] = useState('');
   const [oil, setOil] = useState('');
+  const [date, setDate] = useState(todayStr());
 
   function save() {
     const seedN = parseFloat(seed), oilN = parseFloat(oil);
-    if (!id.trim() || !(seedN > 0) || !(oilN > 0)) return;
+    if (!id.trim() || !(seedN > 0) || !(oilN > 0) || !date) return;
     recordBatch.mutate(
-      { id: id.trim(), seed: seedN, oil: oilN },
-      { onSuccess: () => { setId(''); setSeed(''); setOil(''); } },
+      { id: id.trim(), seed: seedN, oil: oilN, date },
+      { onSuccess: () => { setId(''); setSeed(''); setOil(''); setDate(todayStr()); } },
     );
   }
 
@@ -64,7 +66,11 @@ export function ProductionModule() {
               <input className="input" type="number" value={oil} onChange={(e) => setOil(e.target.value)} placeholder="0" />
             </div>
           </div>
-          <button onClick={save} disabled={!id.trim() || !(parseFloat(seed) > 0) || !(parseFloat(oil) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>Date</label>
+            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <button onClick={save} disabled={!id.trim() || !(parseFloat(seed) > 0) || !(parseFloat(oil) > 0) || !date} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             Save batch
           </button>
         </div>
@@ -97,7 +103,10 @@ export function ProductionModule() {
           <tbody>
             {list.map((b) => (
               <tr key={b.id}>
-                <td style={{ fontWeight: 600 }}>{b.batch_code}</td>
+                <td>
+                  <div style={{ fontWeight: 600 }}>{b.batch_code}</div>
+                  <div style={{ fontWeight: 400, fontSize: 10, color: MUT_50 }}>{new Date(b.created_at).toLocaleDateString()}</div>
+                </td>
                 <td style={{ textAlign: 'right' }}>{b.seed_kg.toLocaleString('en-US')} kg</td>
                 <td style={{ textAlign: 'right' }}>{b.oil_l.toLocaleString('en-US')} L</td>
                 <td style={{ textAlign: 'right', fontWeight: 600 }}>{Math.round(yieldPct(b.seed_kg, b.oil_l))}%</td>

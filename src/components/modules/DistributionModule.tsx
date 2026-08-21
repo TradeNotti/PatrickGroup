@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
+import { todayStr } from '../../lib/format';
 import { useAddDistributor, useDeleteDelivery, useDeleteDistributor, useDeliveries, useDistributors, useRecordDelivery } from '../../state/queries';
 import { useRole } from '../../state/role';
 import { ChevronLeftIcon, ChevronRightLgIcon } from '../icons';
@@ -17,14 +18,15 @@ function DeliveryForm({ distributorId, onSaved }: { distributorId?: number; onSa
   const [route, setRoute] = useState('');
   const [driver, setDriver] = useState('');
   const [status, setStatus] = useState('In transit');
+  const [date, setDate] = useState(todayStr());
 
   if (!canEdit) return null;
 
   function save() {
-    if (!route.trim() || !driver.trim()) return;
+    if (!route.trim() || !driver.trim() || !date) return;
     recordDelivery.mutate(
-      { distributorId, route: route.trim(), driver: driver.trim(), status },
-      { onSuccess: () => { setRoute(''); setDriver(''); setStatus('In transit'); onSaved?.(); } },
+      { distributorId, route: route.trim(), driver: driver.trim(), status, date },
+      { onSuccess: () => { setRoute(''); setDriver(''); setStatus('In transit'); setDate(todayStr()); onSaved?.(); } },
     );
   }
 
@@ -43,15 +45,21 @@ function DeliveryForm({ distributorId, onSaved }: { distributorId?: number; onSa
           <input className="input" value={driver} onChange={(e) => setDriver(e.target.value)} placeholder="Name" />
         </div>
       </div>
-      <div className="field" style={{ marginBottom: 10 }}>
-        <label>Status</label>
-        <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option>In transit</option>
-          <option>Delivered</option>
-          <option>Loading</option>
-        </select>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+        <div className="field" style={{ flex: 1 }}>
+          <label>Status</label>
+          <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option>In transit</option>
+            <option>Delivered</option>
+            <option>Loading</option>
+          </select>
+        </div>
+        <div className="field" style={{ flex: 1 }}>
+          <label>Date</label>
+          <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
       </div>
-      <button onClick={save} disabled={!route.trim() || !driver.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+      <button onClick={save} disabled={!route.trim() || !driver.trim() || !date} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
         Save delivery
       </button>
     </div>
@@ -176,7 +184,7 @@ export function DistributionModule() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{d.name}</div>
                 <div style={{ fontSize: 11, color: MUT_50, marginTop: 2 }}>
-                  {d.territory ? `${d.territory} · ` : ''}{d.delivery_count} record{d.delivery_count === 1 ? '' : 's'}
+                  {d.territory ? `${d.territory} · ` : ''}{d.delivery_count} record{d.delivery_count === 1 ? '' : 's'} · added {new Date(d.created_at).toLocaleDateString()}
                 </div>
               </div>
               <ChevronRightLgIcon />

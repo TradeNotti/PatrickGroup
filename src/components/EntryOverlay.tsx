@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../lib/colors';
-import { money } from '../lib/format';
+import { money, todayStr } from '../lib/format';
 import { useDistributors, useRecordSale, useSales } from '../state/queries';
 import { ChevronLeftLgIcon } from './icons';
 import { Segmented } from './ui/Segmented';
@@ -23,6 +23,7 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
   const [distributorId, setDistributorId] = useState('');
   const [pay, setPay] = useState<'Cash' | 'Credit'>('Cash');
   const [terms, setTerms] = useState('10');
+  const [date, setDate] = useState(todayStr());
 
   if (!open) return null;
 
@@ -30,7 +31,7 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
   const priceN = parseFloat(price) || 0;
   const termsN = parseFloat(terms) || 0;
   const total = qtyN * priceN;
-  const saveDisabled = !(product.trim() && customer.trim() && qtyN > 0 && priceN > 0 && (pay === 'Cash' || termsN > 0));
+  const saveDisabled = !(product.trim() && customer.trim() && qtyN > 0 && priceN > 0 && date && (pay === 'Cash' || termsN > 0));
 
   function save() {
     recordSale.mutate(
@@ -40,8 +41,9 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
         pay,
         terms: pay === 'Credit' ? termsN : 0,
         items: [{ product: product.trim(), qty: qtyN, price: priceN }],
+        date,
       },
-      { onSuccess: () => { setQty(''); onClose(); } },
+      { onSuccess: () => { setQty(''); setDate(todayStr()); onClose(); } },
     );
   }
 
@@ -76,9 +78,15 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
           </div>
         </div>
 
-        <div className="field" style={{ marginBottom: 14 }}>
-          <label>Customer</label>
-          <input className="input" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Name" />
+        <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+          <div className="field" style={{ flex: 2 }}>
+            <label>Customer</label>
+            <input className="input" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Name" />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>Date</label>
+            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
         </div>
 
         <div className="field" style={{ marginBottom: 14 }}>

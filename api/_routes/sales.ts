@@ -1,6 +1,6 @@
 import { requireAuth } from '../_lib/auth.js';
 import { db } from '../_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { parseOptionalDate, readJsonBody, sendJson, withErrors } from '../_lib/http.js';
 import { upsertCustomer } from '../_lib/queries.js';
 import type { Req, Res } from '../_lib/http.js';
 
@@ -11,6 +11,7 @@ interface SaleInput {
   pay: 'Cash' | 'Credit';
   terms: number;
   items: SaleItemInput[];
+  date?: string;
 }
 
 async function handler(req: Req, res: Res) {
@@ -64,6 +65,9 @@ async function handler(req: Req, res: Res) {
   }
   if (pay === 'Credit' && !(terms > 0)) return sendJson(res, 400, { error: 'payment period is required for credit sales' });
 
+  const saleDate = parseOptionalDate(body.date);
+  if (saleDate === 'invalid') return sendJson(res, 400, { error: 'invalid date' });
+
   const total = items.reduce((a, it) => a + Number(it.qty) * Number(it.price), 0);
 
   const pool = db();
@@ -72,8 +76,9 @@ async function handler(req: Req, res: Res) {
     await client.query('begin');
     const customerId = await upsertCustomer(client, customerName);
     const orderRes = await client.query(
-      `insert into sales_orders (customer_id, distributor_id, pay_method, terms_days, total) values ($1, $2, $3, $4, $5) returning id, created_at`,
-      [customerId, distributorId, pay, terms, total],
+      `insert into sales_orders (customer_id, distributor_id, pay_method, terms_days, total, created_at)
+       values ($1, $2, $3, $4, $5, coalesce($6, now())) returning id, created_at`,
+      [customerId, distributorId, pay, terms, total, saleDate],
     );
     const orderId = orderRes.rows[0].id;
     for (const it of items) {
@@ -85,10 +90,10 @@ async function handler(req: Req, res: Res) {
     }
     const revenueAccount = pay === 'Cash' ? 'Cash' : 'Accounts receivable';
     await client.query(
-      `insert into ledger_entries (account, debit, credit, memo, source_type, source_id) values
-        ($1, $2, 0, $3, 'sale', $4),
-        ('Sales revenue', 0, $2, $3, 'sale', $4)`,
-      [revenueAccount, total, `Sale to ${customerName}`, orderId],
+      `insert into ledger_entries (entry_date, account, debit, credit, memo, source_type, source_id) values
+        (coalesce($5, now()), $1, $2, 0, $3, 'sale', $4),
+        (coalesce($5, now()), 'Sales revenue', 0, $2, $3, 'sale', $4)`,
+      [revenueAccount, total, `Sale to ${customerName}`, orderId, saleDate],
     );
     await client.query('commit');
     sendJson(res, 201, { id: orderId, total });

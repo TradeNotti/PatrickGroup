@@ -12,3 +12,7 @@ export function moneyM(n: number): string {
 export function litres(n: number): string {
   return Math.round(n).toLocaleString('en-US') + ' L';
 }
+
+export function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
