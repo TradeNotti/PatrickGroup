@@ -8,7 +8,7 @@ async function handler(req: Req, res: Res) {
 
   if (req.method === 'GET') {
     const { rows } = await db().query(`
-      select d.id, d.name, d.territory, d.phone, d.created_at,
+      select d.id, d.name, d.territory, d.phone, d.created_at, d.access_token,
         count(dl.id)::int as delivery_count
       from distributors d
       left join deliveries dl on dl.distributor_id = d.id
@@ -29,7 +29,7 @@ async function handler(req: Req, res: Res) {
   const { rows } = await db().query(
     `insert into distributors (name, territory, phone) values ($1, $2, $3)
      on conflict (name) do update set territory = coalesce(excluded.territory, distributors.territory), phone = coalesce(excluded.phone, distributors.phone)
-     returning id, name, territory, phone, created_at`,
+     returning id, name, territory, phone, created_at, access_token`,
     [name, territory, phone],
   );
   sendJson(res, 201, { ...rows[0], delivery_count: 0 });
