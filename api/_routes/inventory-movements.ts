@@ -1,7 +1,7 @@
-import { requireAuth } from './_lib/auth.js';
-import { db } from './_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
-import type { Req, Res } from './_lib/http.js';
+import { requireAuth } from '../_lib/auth.js';
+import { db } from '../_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
@@ -14,6 +14,35 @@ async function handler(req: Req, res: Res) {
       [limit],
     );
     return sendJson(res, 200, rows);
+  }
+
+  if (req.method === 'DELETE') {
+    const id = Number(new URL(req.url ?? '/', 'http://x').searchParams.get('id'));
+    if (!id) return sendJson(res, 400, { error: 'id is required' });
+    const pool = db();
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      const found = await client.query<{ item_id: number; direction: 'In' | 'Out'; qty: number }>(
+        `select item_id, direction, qty::float8 as qty from inventory_movements where id = $1`,
+        [id],
+      );
+      if (found.rows.length === 0) {
+        await client.query('rollback');
+        return sendJson(res, 404, { error: 'not found' });
+      }
+      const { item_id, direction, qty } = found.rows[0];
+      const delta = direction === 'In' ? -qty : qty;
+      await client.query(`update inventory_items set qty = greatest(0, qty + $1) where id = $2`, [delta, item_id]);
+      await client.query(`delete from inventory_movements where id = $1`, [id]);
+      await client.query('commit');
+      return sendJson(res, 200, { ok: true });
+    } catch (err) {
+      await client.query('rollback');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });

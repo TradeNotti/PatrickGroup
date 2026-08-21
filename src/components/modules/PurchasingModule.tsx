@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
 import { money } from '../../lib/format';
-import { usePurchases, useRecordPurchase } from '../../state/queries';
+import { useDeletePurchase, usePurchases, useRecordPurchase } from '../../state/queries';
 import { useRole } from '../../state/role';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -10,6 +11,7 @@ import { Tag } from '../ui/Tag';
 export function PurchasingModule() {
   const { data: purchases } = usePurchases();
   const recordPurchase = useRecordPurchase();
+  const deletePurchase = useDeletePurchase();
   const { canEdit } = useRole();
 
   const [supplier, setSupplier] = useState('');
@@ -83,6 +85,7 @@ export function PurchasingModule() {
                 <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>{money(p.price)}</div>
                 <Tag cls="tag-outline" style={{ marginTop: 3 }}>{p.status}</Tag>
               </div>
+              {canEdit && <DeleteButton label="purchase" onConfirm={() => deletePurchase.mutate(p.id)} />}
             </div>
           </div>
         ))}

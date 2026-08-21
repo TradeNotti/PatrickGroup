@@ -1,8 +1,8 @@
-import { requireAuth } from './_lib/auth.js';
-import { db } from './_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
-import { upsertCustomer } from './_lib/queries.js';
-import type { Req, Res } from './_lib/http.js';
+import { requireAuth } from '../_lib/auth.js';
+import { db } from '../_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { upsertCustomer } from '../_lib/queries.js';
+import type { Req, Res } from '../_lib/http.js';
 
 interface SaleItemInput { product: string; qty: number; price: number; }
 interface SaleInput {
@@ -27,6 +27,26 @@ async function handler(req: Req, res: Res) {
       [limit],
     );
     return sendJson(res, 200, rows);
+  }
+
+  if (req.method === 'DELETE') {
+    const id = Number(new URL(req.url ?? '/', 'http://x').searchParams.get('id'));
+    if (!id) return sendJson(res, 400, { error: 'id is required' });
+    const pool = db();
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await client.query(`delete from ledger_entries where source_type = 'sale' and source_id = $1`, [id]);
+      const deleted = await client.query(`delete from sales_orders where id = $1`, [id]);
+      await client.query('commit');
+      if (deleted.rowCount === 0) return sendJson(res, 404, { error: 'not found' });
+      return sendJson(res, 200, { ok: true });
+    } catch (err) {
+      await client.query('rollback');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
@@ -65,10 +85,10 @@ async function handler(req: Req, res: Res) {
     }
     const revenueAccount = pay === 'Cash' ? 'Cash' : 'Accounts receivable';
     await client.query(
-      `insert into ledger_entries (account, debit, credit, memo) values
-        ($1, $2, 0, $3),
-        ('Sales revenue', 0, $2, $3)`,
-      [revenueAccount, total, `Sale to ${customerName}`],
+      `insert into ledger_entries (account, debit, credit, memo, source_type, source_id) values
+        ($1, $2, 0, $3, 'sale', $4),
+        ('Sales revenue', 0, $2, $3, 'sale', $4)`,
+      [revenueAccount, total, `Sale to ${customerName}`, orderId],
     );
     await client.query('commit');
     sendJson(res, 201, { id: orderId, total });

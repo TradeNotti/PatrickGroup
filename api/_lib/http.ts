@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 export type Req = IncomingMessage & { method?: string; url?: string; body?: unknown };

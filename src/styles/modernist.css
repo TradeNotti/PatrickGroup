@@ -231,3 +231,43 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .dialog-body { font-size: 14px; opacity: 0.85; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+/* App shell: a centered "phone" preview on desktop/tablet, full-bleed
+   edge-to-edge on an actual phone viewport. dvh/svh (with vh as a fallback
+   for older browsers) avoid the jump when a mobile browser's address bar
+   shows/hides. */
+.pa-app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--color-neutral-300);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 28px 16px;
+}
+.pa-frame {
+  position: relative;
+  width: 404px;
+  max-width: 100%;
+  height: 868px;
+  max-height: calc(100vh - 56px);
+  max-height: calc(100dvh - 56px);
+  background: var(--color-bg);
+  border: 2px solid var(--color-text);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+@media (max-width: 480px) {
+  .pa-app { padding: 0; align-items: stretch; min-height: 100svh; }
+  .pa-frame {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    height: 100svh;
+    max-height: none;
+    border: none;
+    box-shadow: none;
+  }
+}

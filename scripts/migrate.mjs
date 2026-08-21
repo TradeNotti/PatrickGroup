@@ -16,8 +16,17 @@ async function main() {
 
   const url = process.env.DATABASE_URL;
   if (!url) {
-    console.error('DATABASE_URL is not set — skipping migration.');
-    process.exit(1);
+    // Fail the build on Production — deploying without applying migrations
+    // would be silently wrong. Preview/Development builds (e.g. a branch
+    // whose Vercel project doesn't have DATABASE_URL scoped to Preview) are
+    // allowed to proceed without a database; the app just won't work until
+    // one is configured for that environment, but at least the build succeeds.
+    if (process.env.VERCEL_ENV === 'production') {
+      console.error('DATABASE_URL is not set — required for a production build. Aborting.');
+      process.exit(1);
+    }
+    console.warn('DATABASE_URL is not set — skipping migration (non-production build).');
+    return;
   }
 
   const schemaPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'schema.sql');

@@ -1,7 +1,7 @@
-import { requireAuth } from './_lib/auth.js';
-import { db } from './_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
-import type { Req, Res } from './_lib/http.js';
+import { requireAuth } from '../_lib/auth.js';
+import { db } from '../_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
@@ -14,6 +14,14 @@ async function handler(req: Req, res: Res) {
       [limit],
     );
     return sendJson(res, 200, rows);
+  }
+
+  if (req.method === 'DELETE') {
+    const id = Number(new URL(req.url ?? '/', 'http://x').searchParams.get('id'));
+    if (!id) return sendJson(res, 400, { error: 'id is required' });
+    const deleted = await db().query(`delete from production_batches where id = $1`, [id]);
+    if (deleted.rowCount === 0) return sendJson(res, 404, { error: 'not found' });
+    return sendJson(res, 200, { ok: true });
   }
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });

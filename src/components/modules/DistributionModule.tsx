@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
-import { useAddDistributor, useDeliveries, useDistributors, useRecordDelivery } from '../../state/queries';
+import { useAddDistributor, useDeleteDelivery, useDeleteDistributor, useDeliveries, useDistributors, useRecordDelivery } from '../../state/queries';
 import { useRole } from '../../state/role';
 import { ChevronLeftIcon, ChevronRightLgIcon, LinkIcon } from '../icons';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -59,6 +60,8 @@ function DeliveryForm({ distributorId, onSaved }: { distributorId?: number; onSa
 
 function DeliveryList({ distributorId }: { distributorId?: number }) {
   const { data: deliveries } = useDeliveries(distributorId);
+  const deleteDelivery = useDeleteDelivery();
+  const { canEdit } = useRole();
   const list = deliveries ?? [];
   return (
     <div style={{ borderTop: '2px solid var(--color-divider)' }}>
@@ -70,6 +73,7 @@ function DeliveryList({ distributorId }: { distributorId?: number }) {
             <div style={{ fontSize: 11, color: MUT_50 }}>{d.driver} · {new Date(d.created_at).toLocaleDateString()}</div>
           </div>
           <Tag cls={STATUS_TAG[d.status] || 'tag-neutral'}>{d.status}</Tag>
+          {canEdit && <DeleteButton label="delivery" onConfirm={() => deleteDelivery.mutate(d.id)} />}
         </div>
       ))}
     </div>
@@ -132,6 +136,7 @@ export function DistributionModule() {
   const { data: distributors } = useDistributors();
   const { data: allDeliveries } = useDeliveries();
   const addDistributor = useAddDistributor();
+  const deleteDistributor = useDeleteDistributor();
   const { canEdit } = useRole();
   const [selected, setSelected] = useState<Distributor | null>(null);
 
@@ -193,19 +198,21 @@ export function DistributionModule() {
       <div style={{ borderTop: '2px solid var(--color-divider)', marginBottom: 24 }}>
         {distList.length === 0 && <div style={{ padding: '14px 2px', fontSize: 13, color: MUT_50 }}>No distributors added yet.</div>}
         {distList.map((d) => (
-          <button
-            key={d.id}
-            onClick={() => setSelected(d)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 2px', background: 'none', border: 'none', borderBottom: '1px solid var(--color-divider)', cursor: 'pointer', textAlign: 'left', color: 'inherit' }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{d.name}</div>
-              <div style={{ fontSize: 11, color: MUT_50, marginTop: 2 }}>
-                {d.territory ? `${d.territory} · ` : ''}{d.delivery_count} record{d.delivery_count === 1 ? '' : 's'}
+          <div key={d.id} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-divider)' }}>
+            <button
+              onClick={() => setSelected(d)}
+              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '13px 2px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'inherit' }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{d.name}</div>
+                <div style={{ fontSize: 11, color: MUT_50, marginTop: 2 }}>
+                  {d.territory ? `${d.territory} · ` : ''}{d.delivery_count} record{d.delivery_count === 1 ? '' : 's'}
+                </div>
               </div>
-            </div>
-            <ChevronRightLgIcon />
-          </button>
+              <ChevronRightLgIcon />
+            </button>
+            {canEdit && <DeleteButton label="distributor" onConfirm={() => deleteDistributor.mutate(d.id)} />}
+          </div>
         ))}
       </div>
 

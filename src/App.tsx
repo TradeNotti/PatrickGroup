@@ -38,11 +38,8 @@ function AppShell() {
   }
 
   return (
-    <div
-      className={dark ? 'pa-app pa-dark' : 'pa-app'}
-      style={{ minHeight: '100vh', background: 'var(--color-neutral-300)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '28px 16px', fontFamily: 'var(--font-body)' }}
-    >
-      <div style={{ position: 'relative', width: 404, maxWidth: '100%', height: 868, background: 'var(--color-bg)', border: '2px solid var(--color-text)', boxShadow: 'var(--shadow-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className={dark ? 'pa-app pa-dark' : 'pa-app'}>
+      <div className="pa-frame">
         <TopBar
           darkLabel={dark ? 'Light' : 'Dark'}
           onToggleDark={() => setDark((d) => !d)}

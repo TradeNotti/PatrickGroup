@@ -114,3 +114,13 @@ create table if not exists ledger_entries (
   memo text
 );
 create index if not exists ledger_entries_date_idx on ledger_entries(entry_date desc);
+
+-- source_type/source_id tag which record (if any) posted a ledger entry, so
+-- deleting that record can cascade-delete both legs of its double-entry
+-- pair. Manual entries (posted from the Finance module) get source_type
+-- 'manual' and a synthetic source_id shared by both legs, so deleting one
+-- leg of a manual entry deletes its pair too instead of unbalancing the book.
+alter table ledger_entries add column if not exists source_type text;
+alter table ledger_entries add column if not exists source_id integer;
+create index if not exists ledger_entries_source_idx on ledger_entries(source_type, source_id);
+create sequence if not exists ledger_manual_seq;

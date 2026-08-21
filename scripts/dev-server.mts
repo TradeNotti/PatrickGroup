@@ -1,7 +1,9 @@
 // Local dev-only stand-in for Vercel's file-based /api routing. Each
-// api/<name>.ts file exports a default (req, res) handler with the same
-// signature Vercel's Node runtime calls — this server just dispatches to
-// the same file, so route logic never diverges between local dev and prod.
+// api/_routes/<name>.ts file exports a default (req, res) handler with the
+// same signature Vercel's Node runtime calls, and in prod they're all
+// dispatched by the single api/[route].ts catch-all function — this server
+// dispatches to the same _routes files directly, so route logic never
+// diverges between local dev and prod.
 import { config } from 'dotenv';
 import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
@@ -21,7 +23,7 @@ const server = createServer(async (req, res) => {
       return res.end('not found');
     }
     const name = url.pathname.slice('/api/'.length).replace(/\/+$/, '');
-    const file = path.join(apiDir, `${name}.ts`);
+    const file = path.join(apiDir, '_routes', `${name}.ts`);
     if (name.startsWith('_') || !existsSync(file)) {
       res.statusCode = 404;
       res.setHeader('Content-Type', 'application/json');

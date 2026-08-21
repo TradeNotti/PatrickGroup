@@ -1,7 +1,7 @@
-import { requireAuth } from './_lib/auth.js';
-import { db } from './_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
-import type { Req, Res } from './_lib/http.js';
+import { requireAuth } from '../_lib/auth.js';
+import { db } from '../_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import type { Req, Res } from '../_lib/http.js';
 
 async function handler(req: Req, res: Res) {
   if (!requireAuth(req, res)) return;
@@ -12,6 +12,26 @@ async function handler(req: Req, res: Res) {
        from purchases order by created_at desc limit 50`,
     );
     return sendJson(res, 200, rows);
+  }
+
+  if (req.method === 'DELETE') {
+    const id = Number(new URL(req.url ?? '/', 'http://x').searchParams.get('id'));
+    if (!id) return sendJson(res, 400, { error: 'id is required' });
+    const pool = db();
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      await client.query(`delete from ledger_entries where source_type = 'purchase' and source_id = $1`, [id]);
+      const deleted = await client.query(`delete from purchases where id = $1`, [id]);
+      await client.query('commit');
+      if (deleted.rowCount === 0) return sendJson(res, 404, { error: 'not found' });
+      return sendJson(res, 200, { ok: true });
+    } catch (err) {
+      await client.query('rollback');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
@@ -33,11 +53,12 @@ async function handler(req: Req, res: Res) {
       [supplier, item, qty, price],
     );
     if (price > 0) {
+      const purchaseId = inserted.rows[0].id;
       await client.query(
-        `insert into ledger_entries (account, debit, credit, memo) values
-          ('Inventory – purchases', $1, 0, $2),
-          ('Accounts payable', 0, $1, $2)`,
-        [price, `Purchase from ${supplier}`],
+        `insert into ledger_entries (account, debit, credit, memo, source_type, source_id) values
+          ('Inventory – purchases', $1, 0, $2, 'purchase', $3),
+          ('Accounts payable', 0, $1, $2, 'purchase', $3)`,
+        [price, `Purchase from ${supplier}`, purchaseId],
       );
     }
     await client.query('commit');

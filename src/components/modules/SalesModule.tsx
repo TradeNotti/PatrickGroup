@@ -1,7 +1,8 @@
 import { MUT_50 } from '../../lib/colors';
 import { money } from '../../lib/format';
-import { useDashboard, useSales } from '../../state/queries';
+import { useDashboard, useDeleteSale, useSales } from '../../state/queries';
 import { useRole } from '../../state/role';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -9,6 +10,7 @@ import { Tag } from '../ui/Tag';
 export function SalesModule({ onOpenEntry }: { onOpenEntry: () => void }) {
   const { data: today } = useDashboard('today');
   const { data: orders } = useSales(15);
+  const deleteSale = useDeleteSale();
   const { canEdit } = useRole();
 
   return (
@@ -43,6 +45,7 @@ export function SalesModule({ onOpenEntry }: { onOpenEntry: () => void }) {
                 {o.pay === 'Credit' ? `Credit · ${o.terms}d` : 'Cash'}
               </Tag>
             </div>
+            {canEdit && <DeleteButton label="sale" onConfirm={() => deleteSale.mutate(o.id)} />}
           </div>
         ))}
       </div>
