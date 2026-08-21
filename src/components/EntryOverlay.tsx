@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../lib/colors';
 import { money } from '../lib/format';
-import { useRecordSale, useSales } from '../state/queries';
+import { useDistributors, useRecordSale, useSales } from '../state/queries';
 import { ChevronLeftLgIcon } from './icons';
 import { Segmented } from './ui/Segmented';
 import { SectionLabel } from './ui/SectionLabel';
@@ -14,11 +14,13 @@ function isToday(iso: string): boolean {
 export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const recordSale = useRecordSale();
   const { data: sales } = useSales(15);
+  const { data: distributors } = useDistributors();
 
   const [product, setProduct] = useState('');
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
   const [customer, setCustomer] = useState('');
+  const [distributorId, setDistributorId] = useState('');
   const [pay, setPay] = useState<'Cash' | 'Credit'>('Cash');
   const [terms, setTerms] = useState('10');
 
@@ -32,7 +34,13 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
 
   function save() {
     recordSale.mutate(
-      { customer: customer.trim(), pay, terms: pay === 'Credit' ? termsN : 0, items: [{ product: product.trim(), qty: qtyN, price: priceN }] },
+      {
+        customer: customer.trim(),
+        distributorId: distributorId ? Number(distributorId) : undefined,
+        pay,
+        terms: pay === 'Credit' ? termsN : 0,
+        items: [{ product: product.trim(), qty: qtyN, price: priceN }],
+      },
       { onSuccess: () => { setQty(''); onClose(); } },
     );
   }
@@ -69,8 +77,18 @@ export function EntryOverlay({ open, onClose }: { open: boolean; onClose: () => 
         </div>
 
         <div className="field" style={{ marginBottom: 14 }}>
-          <label>Customer / distributor</label>
+          <label>Customer</label>
           <input className="input" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Name" />
+        </div>
+
+        <div className="field" style={{ marginBottom: 14 }}>
+          <label>Distributor (optional)</label>
+          <select className="input" value={distributorId} onChange={(e) => setDistributorId(e.target.value)}>
+            <option value="">None</option>
+            {distributors?.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="field" style={{ marginBottom: 6 }}>

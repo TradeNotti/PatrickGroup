@@ -75,6 +75,9 @@ alter table deliveries add column if not exists distributor_id integer reference
 create index if not exists deliveries_created_idx on deliveries(created_at desc);
 create index if not exists deliveries_distributor_idx on deliveries(distributor_id);
 
+alter table sales_orders add column if not exists distributor_id integer references distributors(id);
+create index if not exists sales_orders_distributor_idx on sales_orders(distributor_id);
+
 create table if not exists production_batches (
   id serial primary key,
   batch_code text not null,

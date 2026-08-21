@@ -36,9 +36,12 @@ export function useSales(limit = 20) {
 export function useRecordSale() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { customer: string; pay: 'Cash' | 'Credit'; terms: number; items: SaleItemInput[] }) =>
+    mutationFn: (input: { customer: string; distributorId?: number; pay: 'Cash' | 'Credit'; terms: number; items: SaleItemInput[] }) =>
       api.post<{ id: number; total: number }>('/sales', input),
-    onSuccess: () => invalidateFinancials(qc),
+    onSuccess: (_data, vars) => {
+      invalidateFinancials(qc);
+      if (vars.distributorId) qc.invalidateQueries({ queryKey: ['distributors'] });
+    },
   });
 }
 

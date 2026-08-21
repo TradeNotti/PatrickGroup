@@ -13,7 +13,7 @@ async function handler(req: Req, res: Res) {
   const cutoff = rangeCutoff(range);
 
   const pool = db();
-  const [salesRes, collectionsCashRes, collectionsPayRes, stockRes, prodRes, topProductsRes, balances, cash] = await Promise.all([
+  const [salesRes, collectionsCashRes, collectionsPayRes, stockRes, prodRes, topProductsRes, topDistributorsRes, balances, cash] = await Promise.all([
     pool.query(
       `select coalesce(sum(total),0)::float8 as total, count(*)::int as orders
        from sales_orders where created_at >= $1`,
@@ -32,6 +32,13 @@ async function handler(req: Req, res: Res) {
        from sale_order_items soi join sales_orders so on so.id = soi.order_id
        where so.created_at >= $1
        group by soi.product order by value desc limit 5`,
+      [cutoff],
+    ),
+    pool.query(
+      `select d.name as distributor, sum(so.total)::float8 as value
+       from sales_orders so join distributors d on d.id = so.distributor_id
+       where so.created_at >= $1
+       group by d.id, d.name order by value desc limit 5`,
       [cutoff],
     ),
     customerBalances(pool),
@@ -65,6 +72,7 @@ async function handler(req: Req, res: Res) {
     oilMargin: margin,
     cashPosition: cash,
     topProducts: topProductsRes.rows,
+    topDistributors: topDistributorsRes.rows,
     overdue,
   });
 }

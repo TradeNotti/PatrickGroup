@@ -20,6 +20,7 @@ export interface SaleItemInput {
 export interface SaleOrder {
   id: number;
   customer: string;
+  distributor: string | null;
   pay: PayMethod;
   terms: number;
   total: number;
@@ -97,6 +98,7 @@ export interface DashboardData {
   oilMargin: number;
   cashPosition: number;
   topProducts: { product: string; value: number }[];
+  topDistributors: { distributor: string; value: number }[];
   overdue: { name: string; amount: number; days: number }[];
 }
 

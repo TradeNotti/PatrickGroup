@@ -1,6 +1,7 @@
 import { MUT_50 } from '../../lib/colors';
 import { money } from '../../lib/format';
 import { useDashboard, useSales } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -8,10 +9,13 @@ import { Tag } from '../ui/Tag';
 export function SalesModule({ onOpenEntry }: { onOpenEntry: () => void }) {
   const { data: today } = useDashboard('today');
   const { data: orders } = useSales(15);
+  const { canEdit } = useRole();
 
   return (
     <>
-      <button onClick={onOpenEntry} className="btn btn-primary btn-block" style={{ margin: '0 0 18px' }}>+ Record a sale</button>
+      {canEdit && (
+        <button onClick={onOpenEntry} className="btn btn-primary btn-block" style={{ margin: '0 0 18px' }}>+ Record a sale</button>
+      )}
 
       <TileGrid
         tiles={[
@@ -29,7 +33,9 @@ export function SalesModule({ onOpenEntry }: { onOpenEntry: () => void }) {
           <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 2px', borderBottom: '1px solid var(--color-divider)' }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{o.customer}</div>
-              <div style={{ fontSize: 11, color: MUT_50 }}>{new Date(o.created_at).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: MUT_50 }}>
+                {o.distributor ? `${o.distributor} · ` : ''}{new Date(o.created_at).toLocaleString()}
+              </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>{money(o.total)}</div>

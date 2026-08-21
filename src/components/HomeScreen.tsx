@@ -1,6 +1,7 @@
 import { MUT_45, MUT_50, MUT_55 } from '../lib/colors';
 import { litres, money, moneyM } from '../lib/format';
 import { useDashboard } from '../state/queries';
+import { useRole } from '../state/role';
 import { Segmented } from './ui/Segmented';
 import { SectionLabel } from './ui/SectionLabel';
 import type { Range } from '../types';
@@ -13,6 +14,7 @@ interface Props {
 
 export function HomeScreen({ range, setRange, onOpenEntry }: Props) {
   const { data, isLoading } = useDashboard(range);
+  const { canEdit } = useRole();
 
   const metrics = data
     ? [
@@ -44,7 +46,9 @@ export function HomeScreen({ range, setRange, onOpenEntry }: Props) {
         ]}
       />
 
-      <button onClick={onOpenEntry} className="btn btn-primary btn-block" style={{ margin: '0 0 14px' }}>+ Record a sale</button>
+      {canEdit && (
+        <button onClick={onOpenEntry} className="btn btn-primary btn-block" style={{ margin: '0 0 14px' }}>+ Record a sale</button>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--color-divider)', border: '1px solid var(--color-divider)', marginBottom: 24 }}>
         {isLoading
@@ -67,6 +71,19 @@ export function HomeScreen({ range, setRange, onOpenEntry }: Props) {
           <div key={p.product} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 2px', borderBottom: '1px solid var(--color-divider)' }}>
             <div style={{ flex: 1, fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{p.product}</div>
             <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 14 }}>{moneyM(p.value)}</div>
+          </div>
+        ))}
+      </div>
+
+      <SectionLabel>Top distributors</SectionLabel>
+      <div style={{ borderTop: '2px solid var(--color-divider)', marginBottom: 26 }}>
+        {data && data.topDistributors.length === 0 && (
+          <div style={{ padding: '14px 2px', fontSize: 13, color: MUT_50 }}>No sales tagged to a distributor yet for this range.</div>
+        )}
+        {data?.topDistributors.map((d) => (
+          <div key={d.distributor} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 2px', borderBottom: '1px solid var(--color-divider)' }}>
+            <div style={{ flex: 1, fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{d.distributor}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 14 }}>{moneyM(d.value)}</div>
           </div>
         ))}
       </div>
