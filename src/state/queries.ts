@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type {
-  Customer, DashboardData, Delivery, FinanceSummary, InventoryItem, InventoryMovement,
+  Customer, DashboardData, Delivery, Distributor, FinanceSummary, InventoryItem, InventoryMovement,
   LedgerEntry, ProductionBatch, Purchase, Range, SaleItemInput, SaleOrder,
 } from '../types';
 
@@ -62,15 +62,33 @@ export function useRecordMovement() {
   });
 }
 
-export function useDeliveries() {
-  return useQuery({ queryKey: ['deliveries'], queryFn: () => api.get<Delivery[]>('/deliveries') });
+export function useDistributors() {
+  return useQuery({ queryKey: ['distributors'], queryFn: () => api.get<Distributor[]>('/distributors') });
+}
+
+export function useAddDistributor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; territory?: string; phone?: string }) => api.post<Distributor>('/distributors', input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['distributors'] }),
+  });
+}
+
+export function useDeliveries(distributorId?: number) {
+  return useQuery({
+    queryKey: ['deliveries', distributorId ?? null],
+    queryFn: () => api.get<Delivery[]>(`/deliveries${distributorId ? `?distributorId=${distributorId}` : ''}`),
+  });
 }
 
 export function useRecordDelivery() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { route: string; driver: string; status: string }) => api.post('/deliveries', input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['deliveries'] }),
+    mutationFn: (input: { distributorId?: number; route: string; driver: string; status: string }) => api.post('/deliveries', input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['deliveries'] });
+      qc.invalidateQueries({ queryKey: ['distributors'] });
+    },
   });
 }
 
@@ -105,6 +123,18 @@ export function useLedger() {
   return useQuery({
     queryKey: ['ledger'],
     queryFn: () => api.get<{ entries: LedgerEntry[]; totalDebit: number; totalCredit: number }>('/ledger'),
+  });
+}
+
+export function useRecordLedgerEntry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { debitAccount: string; creditAccount: string; amount: number; memo?: string }) => api.post('/ledger', input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ledger'] });
+      qc.invalidateQueries({ queryKey: ['finance-summary'] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }
 

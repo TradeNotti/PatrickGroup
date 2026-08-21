@@ -55,14 +55,25 @@ create table if not exists inventory_movements (
 );
 create index if not exists inventory_movements_created_idx on inventory_movements(created_at desc);
 
+create table if not exists distributors (
+  id serial primary key,
+  name text not null unique,
+  territory text,
+  phone text,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists deliveries (
   id serial primary key,
+  distributor_id integer references distributors(id),
   route text not null,
   driver text not null,
   status text not null default 'In transit',
   created_at timestamptz not null default now()
 );
+alter table deliveries add column if not exists distributor_id integer references distributors(id);
 create index if not exists deliveries_created_idx on deliveries(created_at desc);
+create index if not exists deliveries_distributor_idx on deliveries(distributor_id);
 
 create table if not exists production_batches (
   id serial primary key,

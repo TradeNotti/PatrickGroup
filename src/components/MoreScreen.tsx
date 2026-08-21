@@ -30,7 +30,7 @@ export function MoreScreen({ module, setModule, goCredit, onOpenEntry, onSignOut
   const modules: { key: ModuleKey | 'credit'; name: string; stat: string; go: () => void }[] = [
     { key: 'sales', name: 'Sales', stat: 'Orders, customers, targets', go: () => setModule('sales') },
     { key: 'inventory', name: 'Inventory', stat: 'Seeds, oil, packaging, stock movements', go: () => setModule('inventory') },
-    { key: 'distribution', name: 'Distribution', stat: 'Deliveries and routes', go: () => setModule('distribution') },
+    { key: 'distribution', name: 'Distribution', stat: 'Distributors and deliveries', go: () => setModule('distribution') },
     { key: 'credit', name: 'Credit', stat: owed > 0 ? `${moneyM(owed)} owed` : 'Balances and overdue payments', go: goCredit },
     { key: 'production', name: 'Production', stat: 'Seed input → oil output', go: () => setModule('production') },
     { key: 'purchasing', name: 'Purchasing', stat: 'Suppliers and purchases', go: () => setModule('purchasing') },

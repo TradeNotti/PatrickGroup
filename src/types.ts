@@ -44,10 +44,20 @@ export interface InventoryMovement {
 
 export interface Delivery {
   id: number;
+  distributor_id: number | null;
   route: string;
   driver: string;
   status: string;
   created_at: string;
+}
+
+export interface Distributor {
+  id: number;
+  name: string;
+  territory: string | null;
+  phone: string | null;
+  created_at: string;
+  delivery_count: number;
 }
 
 export interface ProductionBatch {
