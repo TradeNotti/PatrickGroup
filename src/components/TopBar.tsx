@@ -9,7 +9,7 @@ export function TopBar({
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 16px 12px', borderBottom: '2px solid var(--color-divider)' }}>
       <div>
         <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 17, lineHeight: 1 }}>Patrick Group</div>
-        <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--color-text) 50%, transparent)', marginTop: 3 }}>Operating system</div>
+        <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--color-text) 50%, transparent)', marginTop: 3 }}>Management system</div>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
         <button
