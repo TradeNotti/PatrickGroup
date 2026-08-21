@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { clearCookie, parseCookies, sendJson, setCookie } from './http.js';
 import type { Req, Res } from './http.js';

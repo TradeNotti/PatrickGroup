@@ -1,8 +1,8 @@
-import { requireAuth } from './_lib/auth.js';
-import { db } from './_lib/db.js';
-import { readJsonBody, sendJson, withErrors } from './_lib/http.js';
-import { upsertCustomer } from './_lib/queries.js';
-import type { Req, Res } from './_lib/http.js';
+import { requireAuth } from '../_lib/auth.js';
+import { db } from '../_lib/db.js';
+import { readJsonBody, sendJson, withErrors } from '../_lib/http.js';
+import { upsertCustomer } from '../_lib/queries.js';
+import type { Req, Res } from '../_lib/http.js';
 
 interface SaleItemInput { product: string; qty: number; price: number; }
 interface SaleInput {
