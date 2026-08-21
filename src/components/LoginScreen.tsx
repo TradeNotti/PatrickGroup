@@ -15,7 +15,7 @@ export function LoginScreen() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 24 }}>
       <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 22, marginBottom: 4 }}>Patrick Group</div>
       <div style={{ fontSize: 13, color: 'color-mix(in srgb, var(--color-text) 55%, transparent)', marginBottom: 24 }}>
-        Sign in to the operating system
+        Sign in to the management system
       </div>
       <form onSubmit={onSubmit}>
         <div className="field" style={{ marginBottom: 12 }}>

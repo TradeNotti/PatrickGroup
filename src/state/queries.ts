@@ -24,7 +24,7 @@ export function useCustomers() {
 export function useRecordPayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { customerId: number; amount: number }) => api.post('/payments', input),
+    mutationFn: (input: { customerId: number; amount: number; date?: string }) => api.post('/payments', input),
     onSuccess: () => invalidateFinancials(qc),
   });
 }
@@ -36,7 +36,7 @@ export function useSales(limit = 20) {
 export function useRecordSale() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { customer: string; distributorId?: number; pay: 'Cash' | 'Credit'; terms: number; items: SaleItemInput[] }) =>
+    mutationFn: (input: { customer: string; distributorId?: number; pay: 'Cash' | 'Credit'; terms: number; items: SaleItemInput[]; date?: string }) =>
       api.post<{ id: number; total: number }>('/sales', input),
     onSuccess: (_data, vars) => {
       invalidateFinancials(qc);
@@ -67,7 +67,7 @@ export function useInventoryMovements(limit = 20) {
 export function useRecordMovement() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { item: string; qty: number; direction: 'In' | 'Out' }) => api.post('/inventory-movements', input),
+    mutationFn: (input: { item: string; qty: number; direction: 'In' | 'Out'; date?: string }) => api.post('/inventory-movements', input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['inventory-items'] });
       qc.invalidateQueries({ queryKey: ['inventory-movements'] });
@@ -123,7 +123,7 @@ export function useDeliveries(distributorId?: number) {
 export function useRecordDelivery() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { distributorId?: number; route: string; driver: string; status: string }) => api.post('/deliveries', input),
+    mutationFn: (input: { distributorId?: number; route: string; driver: string; status: string; date?: string }) => api.post('/deliveries', input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deliveries'] });
       qc.invalidateQueries({ queryKey: ['distributors'] });
@@ -149,7 +149,7 @@ export function useProductionBatches(limit = 20) {
 export function useRecordBatch() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { id: string; seed: number; oil: number }) => api.post('/production-batches', input),
+    mutationFn: (input: { id: string; seed: number; oil: number; date?: string }) => api.post('/production-batches', input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['production-batches'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
@@ -175,7 +175,7 @@ export function usePurchases() {
 export function useRecordPurchase() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { supplier: string; item: string; qty: number; price: number }) => api.post('/purchases', input),
+    mutationFn: (input: { supplier: string; item: string; qty: number; price: number; date?: string }) => api.post('/purchases', input),
     onSuccess: () => invalidateFinancials(qc),
   });
 }

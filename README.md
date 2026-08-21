@@ -1,4 +1,4 @@
-# Patrick Group — Operating System
+# Patrick Group — Management System
 
 A real, database-backed management app for a Tanzanian sunflower-oil
 business, built from a Claude Design handoff bundle (an exported `.dc.html`

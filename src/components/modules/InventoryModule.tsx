@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
+import { todayStr } from '../../lib/format';
 import { useDeleteInventoryMovement, useInventoryItems, useInventoryMovements, useRecordMovement } from '../../state/queries';
 import { useRole } from '../../state/role';
 import { DeleteButton } from '../ui/DeleteButton';
@@ -17,13 +18,14 @@ export function InventoryModule() {
   const [item, setItem] = useState('');
   const [qty, setQty] = useState('');
   const [direction, setDirection] = useState<'In' | 'Out'>('In');
+  const [date, setDate] = useState(todayStr());
 
   function save() {
     const qtyN = parseFloat(qty);
-    if (!item.trim() || !(qtyN > 0)) return;
+    if (!item.trim() || !(qtyN > 0) || !date) return;
     recordMovement.mutate(
-      { item: item.trim(), qty: qtyN, direction },
-      { onSuccess: () => { setItem(''); setQty(''); } },
+      { item: item.trim(), qty: qtyN, direction, date },
+      { onSuccess: () => { setItem(''); setQty(''); setDate(todayStr()); } },
     );
   }
 
@@ -52,7 +54,11 @@ export function InventoryModule() {
               { label: 'Out', checked: direction === 'Out', onChange: () => setDirection('Out') },
             ]}
           />
-          <button onClick={save} disabled={!item.trim() || !(parseFloat(qty) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>Date</label>
+            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <button onClick={save} disabled={!item.trim() || !(parseFloat(qty) > 0) || !date} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             Save movement
           </button>
         </div>

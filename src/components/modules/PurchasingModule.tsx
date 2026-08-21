@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
-import { money } from '../../lib/format';
+import { money, todayStr } from '../../lib/format';
 import { useDeletePurchase, usePurchases, useRecordPurchase } from '../../state/queries';
 import { useRole } from '../../state/role';
 import { DeleteButton } from '../ui/DeleteButton';
@@ -18,12 +18,13 @@ export function PurchasingModule() {
   const [item, setItem] = useState('');
   const [qty, setQty] = useState('');
   const [price, setPrice] = useState('');
+  const [date, setDate] = useState(todayStr());
 
   function save() {
-    if (!supplier.trim() || !item.trim()) return;
+    if (!supplier.trim() || !item.trim() || !date) return;
     recordPurchase.mutate(
-      { supplier: supplier.trim(), item: item.trim(), qty: parseFloat(qty) || 0, price: parseFloat(price) || 0 },
-      { onSuccess: () => { setSupplier(''); setItem(''); setQty(''); setPrice(''); } },
+      { supplier: supplier.trim(), item: item.trim(), qty: parseFloat(qty) || 0, price: parseFloat(price) || 0, date },
+      { onSuccess: () => { setSupplier(''); setItem(''); setQty(''); setPrice(''); setDate(todayStr()); } },
     );
   }
 
@@ -57,7 +58,11 @@ export function PurchasingModule() {
               <input className="input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
             </div>
           </div>
-          <button onClick={save} disabled={!supplier.trim() || !item.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>Date</label>
+            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <button onClick={save} disabled={!supplier.trim() || !item.trim() || !date} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             Save purchase
           </button>
         </div>
@@ -79,7 +84,7 @@ export function PurchasingModule() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 14 }}>{p.supplier}</div>
-                <div style={{ fontSize: 11, color: MUT_50 }}>{p.item}{p.qty ? ` · ${p.qty.toLocaleString('en-US')} kg` : ''}</div>
+                <div style={{ fontSize: 11, color: MUT_50 }}>{p.item}{p.qty ? ` · ${p.qty.toLocaleString('en-US')} kg` : ''} · {new Date(p.created_at).toLocaleDateString()}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>{money(p.price)}</div>

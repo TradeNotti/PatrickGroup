@@ -21,6 +21,16 @@ export async function readJsonBody<T = Record<string, unknown>>(req: Req): Promi
   return raw ? (JSON.parse(raw) as T) : ({} as T);
 }
 
+/** Parses an optional user-supplied date string (from a "backdate this
+ *  entry" form field). Returns null when absent (caller should fall back to
+ *  now()), or the string 'invalid' when present but unparseable, so the
+ *  caller can 400 instead of silently storing an "Invalid Date". */
+export function parseOptionalDate(value: unknown): Date | null | 'invalid' {
+  if (value === undefined || value === null || value === '') return null;
+  const d = new Date(String(value));
+  return isNaN(d.getTime()) ? 'invalid' : d;
+}
+
 export function parseCookies(req: Req): Record<string, string> {
   const header = req.headers.cookie;
   const out: Record<string, string> = {};

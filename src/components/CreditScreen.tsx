@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../lib/colors';
 import { creditStatus } from '../lib/credit';
-import { money, moneyM } from '../lib/format';
+import { money, moneyM, todayStr } from '../lib/format';
 import { useCustomers, useRecordPayment } from '../state/queries';
 import { useRole } from '../state/role';
 import { PaymentDialog } from './PaymentDialog';
@@ -16,6 +16,7 @@ export function CreditScreen() {
   const { canEdit } = useRole();
   const [q, setQ] = useState('');
   const [dialogCustomer, setDialogCustomer] = useState<Customer | null>(null);
+  const [paymentDate, setPaymentDate] = useState(todayStr());
 
   const owing = (customers ?? []).filter((c) => c.balance > 0);
   const overdueList = owing.filter((c) => creditStatus(c)?.overdue);
@@ -79,11 +80,14 @@ export function CreditScreen() {
         open={!!dialogCustomer}
         name={dialogCustomer?.name ?? ''}
         amount={dialogCustomer ? money(dialogCustomer.balance) : ''}
-        onCancel={() => setDialogCustomer(null)}
+        date={paymentDate}
+        onDateChange={setPaymentDate}
+        onCancel={() => { setDialogCustomer(null); setPaymentDate(todayStr()); }}
         onConfirm={() => {
-          if (!dialogCustomer) return;
-          recordPayment.mutate({ customerId: dialogCustomer.id, amount: dialogCustomer.balance });
+          if (!dialogCustomer || !paymentDate) return;
+          recordPayment.mutate({ customerId: dialogCustomer.id, amount: dialogCustomer.balance, date: paymentDate });
           setDialogCustomer(null);
+          setPaymentDate(todayStr());
         }}
       />
     </div>
