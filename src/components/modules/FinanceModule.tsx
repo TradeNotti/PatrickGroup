@@ -1,33 +1,40 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
 import { money, moneyM } from '../../lib/format';
-import { useFinanceSummary, useLedger, useRecordLedgerEntry } from '../../state/queries';
+import { useDeleteLedgerEntry, useFinanceSummary, useLedger, useRecordLedgerEntry } from '../../state/queries';
 import { useRole } from '../../state/role';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export function FinanceModule() {
   const { data: summary } = useFinanceSummary();
   const { data: ledger } = useLedger();
   const recordEntry = useRecordLedgerEntry();
+  const deleteEntry = useDeleteLedgerEntry();
   const { canEdit } = useRole();
 
   const [debitAccount, setDebitAccount] = useState('');
   const [creditAccount, setCreditAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
+  const [date, setDate] = useState(today());
 
   const maxRevenue = summary ? Math.max(1, ...summary.monthlyRevenue.map((m) => m.revenue)) : 1;
   const balanced = ledger ? Math.abs(ledger.totalDebit - ledger.totalCredit) < 0.01 : true;
   const amountN = parseFloat(amount) || 0;
-  const canSave = debitAccount.trim() && creditAccount.trim() && amountN > 0;
+  const canSave = debitAccount.trim() && creditAccount.trim() && amountN > 0 && date;
 
   function save() {
     if (!canSave) return;
     recordEntry.mutate(
-      { debitAccount: debitAccount.trim(), creditAccount: creditAccount.trim(), amount: amountN, memo: memo.trim() || undefined },
-      { onSuccess: () => { setDebitAccount(''); setCreditAccount(''); setAmount(''); setMemo(''); } },
+      { debitAccount: debitAccount.trim(), creditAccount: creditAccount.trim(), amount: amountN, memo: memo.trim() || undefined, date },
+      { onSuccess: () => { setDebitAccount(''); setCreditAccount(''); setAmount(''); setMemo(''); setDate(today()); } },
     );
   }
 
@@ -86,9 +93,13 @@ export function FinanceModule() {
               <input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Memo</label>
-              <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Optional" />
+              <label>Date</label>
+              <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
+          </div>
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>Memo</label>
+            <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Optional" />
           </div>
           <button onClick={save} disabled={!canSave} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             Save entry
@@ -103,7 +114,7 @@ export function FinanceModule() {
         <>
           <table className="table">
             <thead>
-              <tr><th>Date</th><th>Account</th><th style={{ textAlign: 'right' }}>Debit</th><th style={{ textAlign: 'right' }}>Credit</th></tr>
+              <tr><th>Date</th><th>Account</th><th style={{ textAlign: 'right' }}>Debit</th><th style={{ textAlign: 'right' }}>Credit</th>{canEdit && <th></th>}</tr>
             </thead>
             <tbody>
               {ledger?.entries.map((j) => (
@@ -112,6 +123,7 @@ export function FinanceModule() {
                   <td style={{ fontWeight: 600 }}>{j.account}</td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{j.debit ? money(j.debit) : '—'}</td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>{j.credit ? money(j.credit) : '—'}</td>
+                  {canEdit && <td style={{ textAlign: 'right' }}><DeleteButton label="ledger entry" onConfirm={() => deleteEntry.mutate(j.id)} /></td>}
                 </tr>
               ))}
               <tr style={{ borderTop: '2px solid var(--color-divider)' }}>
@@ -119,6 +131,7 @@ export function FinanceModule() {
                 <td style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 12 }}>Total</td>
                 <td style={{ textAlign: 'right', fontFamily: 'var(--font-heading)', fontWeight: 800, whiteSpace: 'nowrap' }}>{money(ledger?.totalDebit ?? 0)}</td>
                 <td style={{ textAlign: 'right', fontFamily: 'var(--font-heading)', fontWeight: 800, whiteSpace: 'nowrap' }}>{money(ledger?.totalCredit ?? 0)}</td>
+                {canEdit && <td></td>}
               </tr>
             </tbody>
           </table>

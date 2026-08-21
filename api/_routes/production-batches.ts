@@ -16,6 +16,14 @@ async function handler(req: Req, res: Res) {
     return sendJson(res, 200, rows);
   }
 
+  if (req.method === 'DELETE') {
+    const id = Number(new URL(req.url ?? '/', 'http://x').searchParams.get('id'));
+    if (!id) return sendJson(res, 400, { error: 'id is required' });
+    const deleted = await db().query(`delete from production_batches where id = $1`, [id]);
+    if (deleted.rowCount === 0) return sendJson(res, 404, { error: 'not found' });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
 
   const body = await readJsonBody<{ id?: string; seed?: number; oil?: number }>(req);

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
 import { ArrowRightIcon } from '../icons';
-import { useProductionBatches, useRecordBatch } from '../../state/queries';
+import { useDeleteProductionBatch, useProductionBatches, useRecordBatch } from '../../state/queries';
 import { useRole } from '../../state/role';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 
 function yieldPct(seedKg: number, oilL: number): number {
@@ -18,6 +19,7 @@ function isToday(iso: string): boolean {
 export function ProductionModule() {
   const { data: batches } = useProductionBatches(20);
   const recordBatch = useRecordBatch();
+  const deleteBatch = useDeleteProductionBatch();
   const { canEdit } = useRole();
 
   const [id, setId] = useState('');
@@ -91,7 +93,7 @@ export function ProductionModule() {
         <div style={{ fontSize: 13, color: MUT_50 }}>No batches recorded yet.</div>
       ) : (
         <table className="table">
-          <thead><tr><th>Batch</th><th style={{ textAlign: 'right' }}>Seeds</th><th style={{ textAlign: 'right' }}>Oil</th><th style={{ textAlign: 'right' }}>%</th></tr></thead>
+          <thead><tr><th>Batch</th><th style={{ textAlign: 'right' }}>Seeds</th><th style={{ textAlign: 'right' }}>Oil</th><th style={{ textAlign: 'right' }}>%</th>{canEdit && <th></th>}</tr></thead>
           <tbody>
             {list.map((b) => (
               <tr key={b.id}>
@@ -99,6 +101,7 @@ export function ProductionModule() {
                 <td style={{ textAlign: 'right' }}>{b.seed_kg.toLocaleString('en-US')} kg</td>
                 <td style={{ textAlign: 'right' }}>{b.oil_l.toLocaleString('en-US')} L</td>
                 <td style={{ textAlign: 'right', fontWeight: 600 }}>{Math.round(yieldPct(b.seed_kg, b.oil_l))}%</td>
+                {canEdit && <td style={{ textAlign: 'right' }}><DeleteButton label="batch" onConfirm={() => deleteBatch.mutate(b.id)} /></td>}
               </tr>
             ))}
           </tbody>

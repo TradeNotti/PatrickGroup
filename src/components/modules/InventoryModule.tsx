@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
-import { useInventoryItems, useInventoryMovements, useRecordMovement } from '../../state/queries';
+import { useDeleteInventoryMovement, useInventoryItems, useInventoryMovements, useRecordMovement } from '../../state/queries';
 import { useRole } from '../../state/role';
+import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { Segmented } from '../ui/Segmented';
 import { Tag } from '../ui/Tag';
@@ -10,6 +11,7 @@ export function InventoryModule() {
   const { data: items } = useInventoryItems();
   const { data: moves } = useInventoryMovements(15);
   const recordMovement = useRecordMovement();
+  const deleteMovement = useDeleteInventoryMovement();
   const { canEdit } = useRole();
 
   const [item, setItem] = useState('');
@@ -85,6 +87,7 @@ export function InventoryModule() {
             <div style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: 13 }}>
               {m.direction === 'In' ? '+' : '−'}{m.qty.toLocaleString('en-US')}
             </div>
+            {canEdit && <DeleteButton label="movement" onConfirm={() => deleteMovement.mutate(m.id)} />}
           </div>
         ))}
       </div>
