@@ -3,6 +3,7 @@ import { MUT_50, MUT_55 } from '../lib/colors';
 import { creditStatus } from '../lib/credit';
 import { money, moneyM } from '../lib/format';
 import { useCustomers, useRecordPayment } from '../state/queries';
+import { useRole } from '../state/role';
 import { PaymentDialog } from './PaymentDialog';
 import { SearchInput } from './ui/SearchInput';
 import { TileGrid } from './ui/TileGrid';
@@ -12,6 +13,7 @@ import type { Customer } from '../types';
 export function CreditScreen() {
   const { data: customers } = useCustomers();
   const recordPayment = useRecordPayment();
+  const { canEdit } = useRole();
   const [q, setQ] = useState('');
   const [dialogCustomer, setDialogCustomer] = useState<Customer | null>(null);
 
@@ -63,7 +65,7 @@ export function CreditScreen() {
                   {statusLabel && <Tag cls={statusTag} style={{ marginTop: 3 }}>{statusLabel}</Tag>}
                 </div>
               </div>
-              {status?.overdue && (
+              {status?.overdue && canEdit && (
                 <button onClick={() => setDialogCustomer(c)} className="btn btn-primary" style={{ marginTop: 9, padding: '6px 12px', fontSize: 12 }}>
                   Record payment
                 </button>

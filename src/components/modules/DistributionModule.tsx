@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
 import { useAddDistributor, useDeliveries, useDistributors, useRecordDelivery } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { ChevronLeftIcon, ChevronRightLgIcon } from '../icons';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
@@ -11,9 +12,12 @@ const STATUS_TAG: Record<string, string> = { Delivered: 'tag-neutral', 'In trans
 
 function DeliveryForm({ distributorId, onSaved }: { distributorId?: number; onSaved?: () => void }) {
   const recordDelivery = useRecordDelivery();
+  const { canEdit } = useRole();
   const [route, setRoute] = useState('');
   const [driver, setDriver] = useState('');
   const [status, setStatus] = useState('In transit');
+
+  if (!canEdit) return null;
 
   function save() {
     if (!route.trim() || !driver.trim()) return;
@@ -98,6 +102,7 @@ export function DistributionModule() {
   const { data: distributors } = useDistributors();
   const { data: allDeliveries } = useDeliveries();
   const addDistributor = useAddDistributor();
+  const { canEdit } = useRole();
   const [selected, setSelected] = useState<Distributor | null>(null);
 
   const [name, setName] = useState('');
@@ -127,28 +132,30 @@ export function DistributionModule() {
 
   return (
     <>
-      <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
-          Add distributor
-        </div>
-        <div className="field" style={{ marginBottom: 10 }}>
-          <label>Name</label>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Kariakoo Bulk Traders" />
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Territory</label>
-            <input className="input" value={territory} onChange={(e) => setTerritory(e.target.value)} placeholder="Optional" />
+      {canEdit && (
+        <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
+            Add distributor
           </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Phone</label>
-            <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Optional" />
+          <div className="field" style={{ marginBottom: 10 }}>
+            <label>Name</label>
+            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Kariakoo Bulk Traders" />
           </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Territory</label>
+              <input className="input" value={territory} onChange={(e) => setTerritory(e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Phone</label>
+              <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Optional" />
+            </div>
+          </div>
+          <button onClick={saveDistributor} disabled={!name.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Save distributor
+          </button>
         </div>
-        <button onClick={saveDistributor} disabled={!name.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          Save distributor
-        </button>
-      </div>
+      )}
 
       <TileGrid tiles={tiles} />
 

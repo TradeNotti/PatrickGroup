@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from './state/useAuth';
+import { RoleProvider } from './state/role';
 import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
 import { HomeScreen } from './components/HomeScreen';
@@ -9,10 +10,11 @@ import { MoreScreen } from './components/MoreScreen';
 import { EntryOverlay } from './components/EntryOverlay';
 import { LoginScreen } from './components/LoginScreen';
 import type { ModuleKey, Range, Tab } from './types';
+import type { RoleLabel } from './state/role';
 
 const queryClient = new QueryClient();
 
-const ROLES = [
+const ROLES: { label: RoleLabel; greet: string }[] = [
   { label: 'Owner', greet: 'Patrick' },
   { label: 'Manager', greet: 'Manager' },
 ];
@@ -60,7 +62,7 @@ function AppShell() {
           ) : !authed ? (
             <LoginScreen />
           ) : (
-            <>
+            <RoleProvider role={role.label}>
               {tab === 'home' && <HomeScreen range={range} setRange={setRange} onOpenEntry={() => setShowEntry(true)} />}
               {tab === 'credit' && <CreditScreen />}
               {tab === 'more' && (
@@ -72,7 +74,7 @@ function AppShell() {
                   onSignOut={() => logout.mutate()}
                 />
               )}
-            </>
+            </RoleProvider>
           )}
         </div>
 
@@ -87,7 +89,11 @@ function AppShell() {
           />
         )}
 
-        {authed && <EntryOverlay open={showEntry} onClose={() => setShowEntry(false)} />}
+        {authed && (
+          <RoleProvider role={role.label}>
+            <EntryOverlay open={showEntry} onClose={() => setShowEntry(false)} />
+          </RoleProvider>
+        )}
       </div>
     </div>
   );

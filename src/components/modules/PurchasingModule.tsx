@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
 import { money } from '../../lib/format';
 import { usePurchases, useRecordPurchase } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -9,6 +10,7 @@ import { Tag } from '../ui/Tag';
 export function PurchasingModule() {
   const { data: purchases } = usePurchases();
   const recordPurchase = useRecordPurchase();
+  const { canEdit } = useRole();
 
   const [supplier, setSupplier] = useState('');
   const [item, setItem] = useState('');
@@ -28,34 +30,36 @@ export function PurchasingModule() {
 
   return (
     <>
-      <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
-          Record purchase
+      {canEdit && (
+        <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
+            Record purchase
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Supplier</label>
+              <input className="input" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Name" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Item</label>
+              <input className="input" value={item} onChange={(e) => setItem(e.target.value)} placeholder="Sunflower seeds" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Qty (kg)</label>
+              <input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Price (TSh)</label>
+              <input className="input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <button onClick={save} disabled={!supplier.trim() || !item.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Save purchase
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Supplier</label>
-            <input className="input" value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Name" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Item</label>
-            <input className="input" value={item} onChange={(e) => setItem(e.target.value)} placeholder="Sunflower seeds" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Qty (kg)</label>
-            <input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Price (TSh)</label>
-            <input className="input" type="number" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0" />
-          </div>
-        </div>
-        <button onClick={save} disabled={!supplier.trim() || !item.trim()} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          Save purchase
-        </button>
-      </div>
+      )}
 
       <TileGrid
         valueFontSize={18}

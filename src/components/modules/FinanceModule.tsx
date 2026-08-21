@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
 import { money, moneyM } from '../../lib/format';
 import { useFinanceSummary, useLedger, useRecordLedgerEntry } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
 import { Tag } from '../ui/Tag';
@@ -10,6 +11,7 @@ export function FinanceModule() {
   const { data: summary } = useFinanceSummary();
   const { data: ledger } = useLedger();
   const recordEntry = useRecordLedgerEntry();
+  const { canEdit } = useRole();
 
   const [debitAccount, setDebitAccount] = useState('');
   const [creditAccount, setCreditAccount] = useState('');
@@ -63,34 +65,36 @@ export function FinanceModule() {
         </>
       )}
 
-      <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
-          Record ledger entry
+      {canEdit && (
+        <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
+            Record ledger entry
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Debit account</label>
+              <input className="input" value={debitAccount} onChange={(e) => setDebitAccount(e.target.value)} placeholder="e.g. Utilities expense" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Credit account</label>
+              <input className="input" value={creditAccount} onChange={(e) => setCreditAccount(e.target.value)} placeholder="e.g. Cash" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Amount (TSh)</label>
+              <input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Memo</label>
+              <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Optional" />
+            </div>
+          </div>
+          <button onClick={save} disabled={!canSave} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Save entry
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Debit account</label>
-            <input className="input" value={debitAccount} onChange={(e) => setDebitAccount(e.target.value)} placeholder="e.g. Utilities expense" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Credit account</label>
-            <input className="input" value={creditAccount} onChange={(e) => setCreditAccount(e.target.value)} placeholder="e.g. Cash" />
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Amount (TSh)</label>
-            <input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Memo</label>
-            <input className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="Optional" />
-          </div>
-        </div>
-        <button onClick={save} disabled={!canSave} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          Save entry
-        </button>
-      </div>
+      )}
 
       <SectionLabel margin="0 0 8px">General ledger · double-entry (TSh)</SectionLabel>
       {ledger && ledger.entries.length === 0 ? (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MUT_50 } from '../../lib/colors';
 import { useInventoryItems, useInventoryMovements, useRecordMovement } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { SectionLabel } from '../ui/SectionLabel';
 import { Segmented } from '../ui/Segmented';
 import { Tag } from '../ui/Tag';
@@ -9,6 +10,7 @@ export function InventoryModule() {
   const { data: items } = useInventoryItems();
   const { data: moves } = useInventoryMovements(15);
   const recordMovement = useRecordMovement();
+  const { canEdit } = useRole();
 
   const [item, setItem] = useState('');
   const [qty, setQty] = useState('');
@@ -25,32 +27,34 @@ export function InventoryModule() {
 
   return (
     <>
-      <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
-          Record stock movement
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 2 }}>
-            <label>Item</label>
-            <input className="input" value={item} onChange={(e) => setItem(e.target.value)} placeholder="e.g. Oil 20L" />
+      {canEdit && (
+        <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
+            Record stock movement
           </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Qty</label>
-            <input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 2 }}>
+              <label>Item</label>
+              <input className="input" value={item} onChange={(e) => setItem(e.target.value)} placeholder="e.g. Oil 20L" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Qty</label>
+              <input className="input" type="number" value={qty} onChange={(e) => setQty(e.target.value)} placeholder="0" />
+            </div>
           </div>
+          <Segmented
+            name="invdir"
+            style={{ marginBottom: 10 }}
+            options={[
+              { label: 'In', checked: direction === 'In', onChange: () => setDirection('In') },
+              { label: 'Out', checked: direction === 'Out', onChange: () => setDirection('Out') },
+            ]}
+          />
+          <button onClick={save} disabled={!item.trim() || !(parseFloat(qty) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Save movement
+          </button>
         </div>
-        <Segmented
-          name="invdir"
-          style={{ marginBottom: 10 }}
-          options={[
-            { label: 'In', checked: direction === 'In', onChange: () => setDirection('In') },
-            { label: 'Out', checked: direction === 'Out', onChange: () => setDirection('Out') },
-          ]}
-        />
-        <button onClick={save} disabled={!item.trim() || !(parseFloat(qty) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          Save movement
-        </button>
-      </div>
+      )}
 
       <SectionLabel margin="0 0 8px">Stock on hand</SectionLabel>
       {(!items || items.length === 0) ? (

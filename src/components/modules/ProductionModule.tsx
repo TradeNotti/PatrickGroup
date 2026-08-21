@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MUT_50, MUT_55 } from '../../lib/colors';
 import { ArrowRightIcon } from '../icons';
 import { useProductionBatches, useRecordBatch } from '../../state/queries';
+import { useRole } from '../../state/role';
 import { SectionLabel } from '../ui/SectionLabel';
 
 function yieldPct(seedKg: number, oilL: number): number {
@@ -17,6 +18,7 @@ function isToday(iso: string): boolean {
 export function ProductionModule() {
   const { data: batches } = useProductionBatches(20);
   const recordBatch = useRecordBatch();
+  const { canEdit } = useRole();
 
   const [id, setId] = useState('');
   const [seed, setSeed] = useState('');
@@ -41,28 +43,30 @@ export function ProductionModule() {
 
   return (
     <>
-      <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
-        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
-          Record batch
+      {canEdit && (
+        <div style={{ border: '1px solid var(--color-divider)', background: 'var(--color-surface)', padding: 12, marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)', fontWeight: 600, marginBottom: 10 }}>
+            Record batch
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Batch</label>
+              <input className="input" value={id} onChange={(e) => setId(e.target.value)} placeholder="B-1" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Seed (kg)</label>
+              <input className="input" type="number" value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="0" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Oil (L)</label>
+              <input className="input" type="number" value={oil} onChange={(e) => setOil(e.target.value)} placeholder="0" />
+            </div>
+          </div>
+          <button onClick={save} disabled={!id.trim() || !(parseFloat(seed) > 0) || !(parseFloat(oil) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Save batch
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Batch</label>
-            <input className="input" value={id} onChange={(e) => setId(e.target.value)} placeholder="B-1" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Seed (kg)</label>
-            <input className="input" type="number" value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="0" />
-          </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Oil (L)</label>
-            <input className="input" type="number" value={oil} onChange={(e) => setOil(e.target.value)} placeholder="0" />
-          </div>
-        </div>
-        <button onClick={save} disabled={!id.trim() || !(parseFloat(seed) > 0) || !(parseFloat(oil) > 0)} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-          Save batch
-        </button>
-      </div>
+      )}
 
       <SectionLabel>Today's flow</SectionLabel>
       <div style={{ display: 'flex', alignItems: 'stretch', gap: 8, marginBottom: 24 }}>
