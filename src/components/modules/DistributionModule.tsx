@@ -3,7 +3,7 @@ import { MUT_50, MUT_55 } from '../../lib/colors';
 import { todayStr } from '../../lib/format';
 import { useAddDistributor, useDeleteDelivery, useDeleteDistributor, useDeliveries, useDistributors, useRecordDelivery } from '../../state/queries';
 import { useRole } from '../../state/role';
-import { ChevronLeftIcon, ChevronRightLgIcon } from '../icons';
+import { ChevronLeftIcon, ChevronRightLgIcon, LinkIcon } from '../icons';
 import { DeleteButton } from '../ui/DeleteButton';
 import { SectionLabel } from '../ui/SectionLabel';
 import { TileGrid } from '../ui/TileGrid';
@@ -88,6 +88,35 @@ function DeliveryList({ distributorId }: { distributorId?: number }) {
   );
 }
 
+function CopyRankingLink({ token }: { token: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const base = import.meta.env.VITE_RANKINGS_URL;
+
+  if (!base) return null;
+  if (!token) {
+    return <div style={{ fontSize: 12, color: MUT_50, marginBottom: 18 }}>Ranking link not generated yet.</div>;
+  }
+  const rankingsBase = base;
+
+  function copyLink() {
+    navigator.clipboard.writeText(`${rankingsBase.replace(/\/+$/, '')}/d/${token}`).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <button
+      onClick={copyLink}
+      className="btn btn-secondary"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 18 }}
+    >
+      <LinkIcon />
+      {copied ? 'Link copied' : 'Copy ranking link'}
+    </button>
+  );
+}
+
 function DistributorDetail({ distributor, onBack }: { distributor: Distributor; onBack: () => void }) {
   return (
     <>
@@ -103,6 +132,7 @@ function DistributorDetail({ distributor, onBack }: { distributor: Distributor; 
           {[distributor.territory, distributor.phone].filter(Boolean).join(' · ') || 'No territory or phone on file'}
         </div>
       </div>
+      <CopyRankingLink token={distributor.access_token} />
       <DeliveryForm distributorId={distributor.id} />
       <SectionLabel margin="0 0 8px">Records</SectionLabel>
       <DeliveryList distributorId={distributor.id} />

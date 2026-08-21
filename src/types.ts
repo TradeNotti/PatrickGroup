@@ -59,6 +59,9 @@ export interface Distributor {
   phone: string | null;
   created_at: string;
   delivery_count: number;
+  /** Backs the distributor's private link on the Distributor Rankings
+   *  companion site. Null until that site's migration backfills it. */
+  access_token: string | null;
 }
 
 export interface ProductionBatch {

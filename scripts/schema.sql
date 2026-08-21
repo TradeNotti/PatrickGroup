@@ -62,6 +62,13 @@ create table if not exists distributors (
   phone text,
   created_at timestamptz not null default now()
 );
+-- Unguessable per-distributor token backing the private ranking link on
+-- the companion Distributor Rankings site
+-- (github.com/TradeNotti/Distributors.PatrickGroup). That site generates
+-- and backfills the actual token values; this app only needs the column
+-- to exist so it can read and display the link.
+alter table distributors add column if not exists access_token text;
+create unique index if not exists distributors_access_token_idx on distributors(access_token);
 
 create table if not exists deliveries (
   id serial primary key,
